@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { addDays, fmt, fromIsoDay, isoDay } from "@/lib/dates";
 import { patternFor, themeOf, THEMES } from "@/lib/listThemes";
 import type { Member } from "@/lib/types";
@@ -8,7 +8,6 @@ import { useTodos, type TodoItem, type TodoList } from "@/lib/useTodos";
 import { Avatar } from "./Avatar";
 import { FeatureSheet } from "./FeatureSheet";
 
-const FILTER_KEY = "planner.listFilter";
 const EMOJIS = ["✅", "🏠", "🧹", "🛠️", "🎒", "🧳", "🎄", "🎂", "🐶", "🚗", "💼", "🌱", "📚", "💊", "🎁", "⭐"];
 const STARTERS: [string, string][] = [["🏠", "Jobs around the house"], ["🎒", "School"], ["🧳", "Holiday packing"]];
 
@@ -22,46 +21,30 @@ export function dueLabel(due: string, today: string): { text: string; tone: "" |
 
 type Props = { householdId: string; members: Member[]; photos: Record<string, string>; me: Member | null };
 type Todos = ReturnType<typeof useTodos>;
-type Filter = "all" | "adult" | "kids";
 
 // Lists as a board of cards: plain cards for grown-ups, themed sticker cards for the kids
 export function TodoPanel({ householdId, members, photos, me }: Props) {
   const todos = useTodos(householdId);
-  const [filter, setFilter] = useState<Filter>("all");
   const [editing, setEditing] = useState<TodoItem | null>(null);
   const [listSheet, setListSheet] = useState<{ list: TodoList | null; kind?: "adult" | "kids" } | null>(null);
   const today = isoDay(new Date());
 
+  // Cards are shared out into columns by hand: Safari mis-handles taps inside CSS columns
+  const [cols, setCols] = useState(1);
+  const boardRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    try {
-      const f = localStorage.getItem(FILTER_KEY);
-      if (f === "adult" || f === "kids") setFilter(f);
-    } catch {}
-  }, []);
-  const chooseFilter = (f: Filter) => {
-    setFilter(f);
-    try {
-      localStorage.setItem(FILTER_KEY, f);
-    } catch {}
-  };
-
-  const shown = todos.lists.filter((l) => filter === "all" || l.kind === filter);
-  const hasKids = todos.lists.some((l) => l.kind === "kids");
-  const hasAdult = todos.lists.some((l) => l.kind !== "kids");
+    const el = boardRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([e]) => setCols(Math.max(1, Math.min(4, Math.floor((e.contentRect.width + 14) / 334)))));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [todos.loaded, todos.lists.length]);
+  const columns = Array.from({ length: cols }, (_, c) => todos.lists.filter((_, i) => i % cols === c));
 
   return (
     <section className="lists-board" aria-label="Lists">
       <header className="lb-head">
         <h2 className="panel-title">Lists</h2>
-        {hasKids && hasAdult && (
-          <div className="chips" role="group" aria-label="Show">
-            {(["all", "adult", "kids"] as Filter[]).map((f) => (
-              <button key={f} type="button" className={`chip-btn${filter === f ? " is-on" : ""}`} onClick={() => chooseFilter(f)}>
-                {f === "all" ? "All lists" : f === "adult" ? "Grown-ups" : "Kids"}
-              </button>
-            ))}
-          </div>
-        )}
         <span className="spacer" />
         <button className="btn btn-soft" onClick={() => setListSheet({ list: null, kind: "kids" })}>🌈 Kids&apos; list</button>
         <button className="btn btn-primary" onClick={() => setListSheet({ list: null, kind: "adult" })}>+ New list</button>
@@ -87,14 +70,18 @@ export function TodoPanel({ householdId, members, photos, me }: Props) {
           </div>
         </div>
       ) : (
-        <div className="board">
-          {shown.map((l) =>
-            l.kind === "kids" ? (
-              <KidsCard key={l.id} list={l} todos={todos} members={members} photos={photos} me={me} onSettings={() => setListSheet({ list: l })} />
-            ) : (
-              <AdultCard key={l.id} list={l} todos={todos} members={members} photos={photos} me={me} today={today} onEdit={setEditing} onSettings={() => setListSheet({ list: l })} />
-            ),
-          )}
+        <div className="board" ref={boardRef} style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
+          {columns.map((col, c) => (
+            <div key={c} className="board-col">
+              {col.map((l) =>
+                l.kind === "kids" ? (
+                  <KidsCard key={l.id} list={l} todos={todos} members={members} photos={photos} me={me} onSettings={() => setListSheet({ list: l })} />
+                ) : (
+                  <AdultCard key={l.id} list={l} todos={todos} members={members} photos={photos} me={me} today={today} onEdit={setEditing} onSettings={() => setListSheet({ list: l })} />
+                ),
+              )}
+            </div>
+          ))}
         </div>
       )}
 
@@ -360,7 +347,7 @@ function EditTodo({ item, members, photos, onSave, onDelete }: { item: TodoItem;
 type ListPatch = { name: string; emoji: string; kind: "adult" | "kids"; theme: string | null; owner: string | null };
 
 function EditList({ list, startKind, members, photos, count, onSave, onDelete }: { list: TodoList | null; startKind: "adult" | "kids"; members: Member[]; photos: Record<string, string>; count: number; onSave: (p: ListPatch) => void; onDelete: () => void }) {
-  const [kind, setKind] = useState<"adult" | "kids">(startKind);
+  const kind = startKind;
   const [emoji, setEmoji] = useState(list?.emoji ?? "✅");
   const [theme, setTheme] = useState(list?.theme ?? "christmas");
   const kids = members.filter((m) => m.role === "child");
@@ -385,15 +372,6 @@ function EditList({ list, startKind, members, photos, count, onSave, onDelete }:
         onSave({ name: name.trim(), emoji: kind === "kids" ? themeOf(theme).emoji : emoji, kind, theme: kind === "kids" ? theme : null, owner: kind === "kids" ? owner : null });
       }}
     >
-      <div className="kind-pick" role="radiogroup" aria-label="Type of list">
-        <button type="button" role="radio" aria-checked={kind === "adult"} className={`kind-tile${kind === "adult" ? " is-on" : ""}`} onClick={() => setKind("adult")}>
-          <span aria-hidden="true">📝</span> Grown-up
-        </button>
-        <button type="button" role="radio" aria-checked={kind === "kids"} className={`kind-tile is-kids${kind === "kids" ? " is-on" : ""}`} onClick={() => { setKind("kids"); if (!owner && kids[0]) { setOwner(kids[0].id); rename(kids[0].id, theme); } }}>
-          <span aria-hidden="true">🌈</span> Kids
-        </button>
-      </div>
-
       {kind === "kids" && (
         <>
           <fieldset className="who-picker">

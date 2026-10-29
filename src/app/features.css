@@ -246,3 +246,8 @@
 /* Pack cards into columns so short lists don't leave gaps */
 .board { display: block; columns: 3 320px; column-gap: 14px; }
 .board > * { break-inside: avoid; margin-bottom: 14px; width: 100%; }
+/* Board columns (shared out in code) */
+.board { display: grid !important; columns: auto !important; gap: 14px; align-items: start; }
+.board-col { display: grid; gap: 14px; align-content: start; min-width: 0; }
+.board-col > * { margin-bottom: 0 !important; }
+.kitem:nth-child(n) { transform: none; }
