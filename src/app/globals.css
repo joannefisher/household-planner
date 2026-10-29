@@ -531,3 +531,20 @@ input:focus, select:focus, textarea:focus { border-color: var(--primary); outlin
 .chip-btn.is-on { background: var(--ink); border-color: var(--ink); color: var(--bg); }
 .swatches.small .swatch { width: 34px; height: 34px; box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.08); }
 .swatches.small .swatch.is-on { box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--ink); }
+
+/* Kitchen screen: one section at a time, using the whole screen; tabs along the bottom */
+.app.is-wide { padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
+.is-wide .tabs { left: 50%; right: auto; transform: translateX(-50%); width: min(620px, calc(100% - 40px)); bottom: 12px; border-radius: 999px; padding: 6px; background: var(--surface); box-shadow: 0 6px 24px rgb(34 28 69 / 0.14); grid-template-columns: repeat(3, 1fr); }
+.is-wide .tabs button { min-height: 52px; font-size: 19px; }
+.tabs { grid-template-columns: repeat(3, 1fr); }
+.is-wide .body > .cal { flex: 1; }
+.full-panel { flex: 1; min-height: 0; overflow-y: auto; background: var(--surface); border-radius: var(--r-panel); padding: 16px; }
+.list.is-full { flex: 1; width: auto !important; padding: 20px 24px; }
+.list.is-full .add-bar { max-width: 760px; }
+.list.is-full .add-bar input { font-size: 20px; min-height: 56px; }
+.list.is-full .list-scroll { columns: 3 280px; column-gap: 32px; }
+.list.is-full .aisle { break-inside: avoid; margin-bottom: 16px; }
+.list.is-full .aisle + .aisle { margin-top: 0; }
+.list.is-full .item-main { min-height: 54px; font-size: 19px; }
+.list.is-full .panel-title { font-size: 34px; }
+.is-wide .top:not(:has(.people)) .clock-block { margin-right: auto; }

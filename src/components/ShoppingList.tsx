@@ -15,9 +15,11 @@ type Props = {
   addedBy: string | null;
   // On the shared kitchen screen, people tap their face so the list knows who added what
   onPickAdder?: (id: string) => void;
+  // Fills the kitchen screen, with aisles laid out in columns
+  full?: boolean;
 };
 
-export function ShoppingList({ list, members, photos, addedBy, onPickAdder }: Props) {
+export function ShoppingList({ list, members, photos, addedBy, onPickAdder, full }: Props) {
   const [text, setText] = useState("");
   const [flash, setFlash] = useState<string | null>(null);
   const [editing, setEditing] = useState<ShoppingItem | null>(null);
@@ -55,7 +57,7 @@ export function ShoppingList({ list, members, photos, addedBy, onPickAdder }: Pr
   }
 
   return (
-    <section className="list" aria-label="Shopping list">
+    <section className={`list${full ? " is-full" : ""}`} aria-label="Shopping list">
       <div className="list-head">
         <h2 className="panel-title">Shopping</h2>
         <span className="list-count">{toBuy.length === 0 ? "Nothing to buy" : `${toBuy.length} to buy`}</span>

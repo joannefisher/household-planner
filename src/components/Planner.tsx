@@ -13,11 +13,12 @@ import { FamilySheet } from "./FamilySheet";
 import { ListsTab } from "./ListsTab";
 import { SettingsExtras } from "./SettingsExtras";
 import { ShoppingList } from "./ShoppingList";
-import { SidePanel } from "./SidePanel";
+import { TodoPanel } from "./TodoPanel";
 import { Agenda, WeekGrid } from "./Week";
 
 const ADDER_KEY = "planner.addingAs";
 const HIDDEN_KEY = "planner.hiddenPeople";
+const TAB_KEY = "planner.tab";
 
 function readStore<T>(key: string, fallback: T): T {
   try {
@@ -80,6 +81,14 @@ export function Planner() {
   const weather = useWeather(household?.latitude, household?.longitude);
 
   const [tab, setTab] = useState<"week" | "list" | "lists">("week");
+  const chooseTab = (t: "week" | "list" | "lists") => {
+    setTab(t);
+    writeStore(TAB_KEY, t);
+  };
+  useEffect(() => {
+    const saved = readStore<string>(TAB_KEY, "week");
+    if (saved === "list" || saved === "lists") setTab(saved);
+  }, []);
   const [sheet, setSheet] = useState<SheetRequest | null>(null);
   const [familyOpen, setFamilyOpen] = useState(false);
   const [familyMember, setFamilyMember] = useState<string | null>(null);
@@ -210,7 +219,7 @@ export function Planner() {
           <span className="today-date">{fmt(now, { weekday: "long", day: "numeric", month: "long" })}</span>
         </div>
 
-        {people}
+        {tab === "week" && people}
 
         <div className="top-right">
           {weather && current && (
@@ -222,13 +231,13 @@ export function Planner() {
           <button className="icon-btn family-btn" onClick={() => editPerson(null)} aria-label="Family settings" title="Family">
             <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Zm7.43-2.53a7.8 7.8 0 0 0 0-1.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.4 7.4 0 0 0-1.68-.97l-.36-2.54A.5.5 0 0 0 14.13 3h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.6.24-1.16.57-1.68.97l-2.39-.96a.5.5 0 0 0-.6.22L2.84 9.51a.5.5 0 0 0 .12.64l2.03 1.58a7.8 7.8 0 0 0 0 1.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.13.22.39.3.6.22l2.39-.96c.52.4 1.08.73 1.68.97l.36 2.54c.04.24.25.42.5.42h3.84c.25 0 .46-.18.5-.42l.36-2.54c.6-.24 1.16-.57 1.68-.97l2.39.96c.22.08.47 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58Z"/></svg>
           </button>
-          {wide && <button className="btn btn-primary btn-big add-event" onClick={openNew}>+ Event</button>}
+          {wide && tab === "week" && <button className="btn btn-primary btn-big add-event" onClick={openNew}>+ Event</button>}
         </div>
       </header>
 
       <main className="body">
-        {wide ? (
-          <>
+        {tab === "week" ? (
+          wide ? (
             <div className="cal">
               <div className="cal-bar">
                 <h2 className="cal-title">{fmt(weekStart, { month: "long", year: "numeric" })}</h2>
@@ -236,30 +245,33 @@ export function Planner() {
               </div>
               <WeekGrid {...shared} />
             </div>
-            <SidePanel householdId={household.id} members={members} photos={photos} me={me} shopping={<ShoppingList list={list} members={members} photos={photos} addedBy={addingAs} onPickAdder={(id) => { setAddingAs(id); writeStore(ADDER_KEY, id); }} />} />
-          </>
-        ) : tab === "week" ? (
-          <>
-            <div className="cal-bar">{weekNav}</div>
-            <Agenda {...shared} />
-          </>
+          ) : (
+            <>
+              <div className="cal-bar">{weekNav}</div>
+              <Agenda {...shared} />
+            </>
+          )
         ) : tab === "lists" ? (
-          <ListsTab householdId={household.id} members={members} photos={photos} me={me} />
+          // The kitchen screen never shows gift ideas, so surprises stay secret
+          wide ? <div className="full-panel"><TodoPanel householdId={household.id} members={members} photos={photos} me={me} /></div> : <ListsTab householdId={household.id} members={members} photos={photos} me={me} />
         ) : (
-          <ShoppingList list={list} members={members} photos={photos} addedBy={me?.id ?? null} />
+          <ShoppingList
+            list={list}
+            members={members}
+            photos={photos}
+            addedBy={wide ? addingAs : me?.id ?? null}
+            onPickAdder={wide ? (id) => { setAddingAs(id); writeStore(ADDER_KEY, id); } : undefined}
+            full={wide}
+          />
         )}
       </main>
 
-      {!wide && (
-        <>
-          {tab === "week" && <button className="fab" onClick={openNew} aria-label="Add an event">+</button>}
-          <nav className="tabs" aria-label="Sections">
-            <button className={tab === "week" ? "is-on" : ""} aria-current={tab === "week"} onClick={() => setTab("week")}>Week</button>
-            <button className={tab === "list" ? "is-on" : ""} aria-current={tab === "list"} onClick={() => setTab("list")}>Shopping{toBuy ? ` · ${toBuy}` : ""}</button>
-            <button className={tab === "lists" ? "is-on" : ""} aria-current={tab === "lists"} onClick={() => setTab("lists")}>Lists</button>
-          </nav>
-        </>
-      )}
+      {tab === "week" && !wide && <button className="fab" onClick={openNew} aria-label="Add an event">+</button>}
+      <nav className="tabs" aria-label="Sections">
+        <button className={tab === "week" ? "is-on" : ""} aria-current={tab === "week"} onClick={() => chooseTab("week")}>{wide ? "Calendar" : "Week"}</button>
+        <button className={tab === "list" ? "is-on" : ""} aria-current={tab === "list"} onClick={() => chooseTab("list")}>Shopping{toBuy ? ` · ${toBuy}` : ""}</button>
+        <button className={tab === "lists" ? "is-on" : ""} aria-current={tab === "lists"} onClick={() => chooseTab("lists")}>Lists</button>
+      </nav>
 
       <EventSheet
         request={sheet}
