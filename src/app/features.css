@@ -137,3 +137,112 @@
 .fav-star.is-on { color: #f5a524; }
 .fav-star.is-big { font-size: 32px; }
 .recipe-title-row { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
+
+/* ---------- Lists board ---------- */
+.full-panel { background: transparent !important; padding: 0 !important; }
+.lists-board { display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+.lb-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.lb-head .panel-title { margin-right: 6px; }
+.board { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 14px; align-items: start; }
+
+.lb-start { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 14px; }
+.lb-start .usuals { grid-column: 1 / -1; }
+.start-tile { border: 0; border-radius: 26px; padding: 22px; text-align: left; display: grid; gap: 6px; background: var(--surface); color: var(--ink); min-height: 170px; align-content: start; }
+.start-tile strong { font-family: var(--display); font-size: 24px; }
+.start-tile span:last-child { color: var(--muted); }
+.start-tile.is-kids { background: linear-gradient(150deg, #ff7ab6, #8b5cf6); color: #fff; }
+.start-tile.is-kids span:last-child { color: rgb(255 255 255 / 0.85); }
+.start-emoji { font-size: 40px; }
+
+/* Grown-up card */
+.lcard { background: var(--surface); border-radius: 22px; padding: 14px 16px 12px; display: grid; gap: 10px; max-height: 560px; overflow-y: auto; }
+.lcard-head { display: flex; align-items: center; gap: 10px; }
+.lcard-emoji { font-size: 28px; width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; background: var(--surface-2); flex: none; }
+.lcard-title { flex: 1; min-width: 0; }
+.lcard-title h3 { font-family: var(--display); font-size: 20px; margin: 0; line-height: 1.15; }
+.lcard-meta { font-size: 13px; color: var(--muted); }
+.lcard-more { background: var(--surface-2); }
+.lcard-progress { height: 6px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.lcard-progress span { display: block; height: 100%; background: var(--primary); border-radius: inherit; transition: width 300ms; }
+.card-add input { min-height: 44px; }
+.lcard-items { list-style: none; margin: 0; padding: 0; }
+.lrow { display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--rule); min-height: 50px; }
+.lrow:last-child { border-bottom: 0; }
+.lrow-tick { border: 0; background: none; padding: 0; width: 34px; height: 44px; display: grid; place-items: center; flex: none; }
+.lrow-main { flex: 1; min-width: 0; border: 0; background: none; text-align: left; padding: 6px 0; display: flex; flex-direction: column; }
+.lrow-title { font-size: 17px; }
+.lrow.is-done .lrow-title { color: var(--muted); text-decoration: line-through; }
+.lrow.is-done .tick { background: var(--muted); border-color: var(--muted); color: var(--surface); }
+.lcard-done { display: flex; flex-wrap: wrap; gap: 4px; border-top: 2px dashed var(--rule); padding-top: 6px; }
+.lcard-done .lcard-items { width: 100%; }
+
+/* Kids' card */
+.kcard {
+  position: relative;
+  border-radius: 28px;
+  padding: 16px 16px 14px;
+  color: var(--k-ink);
+  display: grid;
+  gap: 12px;
+  box-shadow: 0 10px 26px rgb(34 28 69 / 0.16);
+  max-height: 640px;
+  overflow-y: auto;
+  background-size: 180px 180px, cover;
+}
+.kcard-head { display: flex; align-items: center; gap: 12px; }
+.kcard-head .avatar { box-shadow: 0 0 0 4px rgb(255 255 255 / 0.85); }
+.kcard-badge { font-size: 40px; width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; background: rgb(255 255 255 / 0.85); }
+.kcard-title { flex: 1; min-width: 0; }
+.kcard-title h3 { font-family: var(--display); font-size: 26px; font-weight: 800; margin: 0; line-height: 1.05; text-shadow: 0 2px 0 rgb(0 0 0 / 0.12); }
+.kcard-meta { font-weight: 700; font-size: 15px; opacity: 0.9; }
+.kcard-theme { font-size: 34px; transform: rotate(12deg); }
+.kcard-more { background: rgb(255 255 255 / 0.25); color: inherit; }
+.kcard-stars { display: flex; flex-wrap: wrap; gap: 2px; font-size: 20px; line-height: 1; }
+.kcard-stars span { color: rgb(255 255 255 / 0.35); }
+.kcard-stars span.is-on { color: var(--k-accent); text-shadow: 0 0 8px rgb(255 255 255 / 0.6); }
+.card-add.is-big input { min-height: 56px; font-size: 20px; border-radius: 999px; border: 0; padding-left: 20px; box-shadow: inset 0 0 0 3px rgb(255 255 255 / 0.6); }
+.card-add.is-big .btn-primary { background: var(--k-accent); color: #2a1c00; font-size: 19px; padding: 0 22px; }
+.kcard .flash { color: inherit; opacity: 0.9; }
+.kcard-items { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.kitem { background: rgb(255 255 255 / 0.94); color: #2a2148; border-radius: 20px; padding: 6px 8px; box-shadow: 0 3px 0 rgb(0 0 0 / 0.12); }
+.kitem:nth-child(odd) { transform: rotate(-0.6deg); }
+.kitem:nth-child(even) { transform: rotate(0.5deg); }
+.kitem-row { position: relative; display: flex; align-items: center; gap: 10px; }
+.kitem-sticker { border: 0; width: 52px; height: 52px; border-radius: 16px; font-size: 32px; background: color-mix(in srgb, var(--k-from) 14%, #fff); flex: none; line-height: 1; }
+.kitem-sticker.is-empty { font-size: 22px; color: color-mix(in srgb, var(--k-from) 70%, #888); border: 2.5px dashed color-mix(in srgb, var(--k-from) 40%, #ccc); background: transparent; }
+.kitem-title { flex: 1; min-width: 0; font-family: var(--display); font-size: 21px; font-weight: 700; line-height: 1.15; }
+.kitem-tick { border: 0; width: 48px; height: 48px; border-radius: 50%; font-size: 28px; background: #fff; box-shadow: inset 0 0 0 3.5px color-mix(in srgb, var(--k-from) 55%, #bbb); flex: none; line-height: 1; }
+.kitem.is-done .kitem-tick { box-shadow: none; background: color-mix(in srgb, var(--k-accent) 35%, #fff); }
+.kitem.is-done .kitem-title { text-decoration: line-through; text-decoration-thickness: 3px; text-decoration-color: color-mix(in srgb, var(--k-from) 70%, transparent); opacity: 0.6; }
+.kitem.is-cheer { animation: kpop 500ms ease-out; }
+@keyframes kpop { 40% { transform: scale(1.05) rotate(-1.5deg); } 100% { transform: none; } }
+.burst { position: absolute; right: 24px; top: 50%; pointer-events: none; }
+.burst span { position: absolute; font-size: 22px; animation: kburst 1000ms ease-out forwards; }
+@keyframes kburst {
+  0% { transform: rotate(var(--a)) translateY(0) scale(0.4); opacity: 1; }
+  100% { transform: rotate(var(--a)) translateY(-70px) scale(1.1); opacity: 0; }
+}
+.sticker-tray { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px 2px 4px; }
+.sticker-tray button { border: 0; width: 48px; height: 48px; border-radius: 14px; font-size: 28px; background: color-mix(in srgb, var(--k-from) 10%, #fff); }
+.sticker-tray button.is-on { box-shadow: inset 0 0 0 3px var(--k-from); }
+.sticker-tray .tray-none { width: auto; padding: 0 12px; font-size: 14px; font-weight: 700; color: #5a4d7a; }
+.kcard-clear { justify-self: start; background: rgb(255 255 255 / 0.9); color: #2a2148; }
+
+/* New list sheet */
+.kind-pick { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.kind-tile { border: 3px solid var(--rule); border-radius: 18px; padding: 14px; font-family: var(--display); font-size: 19px; font-weight: 700; background: var(--surface); color: var(--ink); display: flex; align-items: center; justify-content: center; gap: 8px; }
+.kind-tile span { font-size: 26px; }
+.kind-tile.is-on { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 10%, var(--surface)); }
+.kind-tile.is-kids.is-on { border-color: #ff7ab6; background: linear-gradient(150deg, #ffe1ef, #ece3ff); }
+.theme-pick { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
+.theme-tile { border: 0; border-radius: 18px; min-height: 86px; padding: 10px; font-family: var(--display); font-weight: 800; font-size: 16px; display: grid; place-items: center; gap: 2px; background-size: 180px 180px, cover; box-shadow: inset 0 0 0 3px transparent; }
+.theme-tile.is-on { box-shadow: 0 0 0 3px var(--surface), 0 0 0 6px var(--ink); }
+.theme-emoji { font-size: 30px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .kitem:nth-child(n) { transform: none; }
+  .burst { display: none; }
+}
+/* Pack cards into columns so short lists don't leave gaps */
+.board { display: block; columns: 3 320px; column-gap: 14px; }
+.board > * { break-inside: avoid; margin-bottom: 14px; width: 100%; }

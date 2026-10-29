@@ -4,7 +4,19 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { getSupabase } from "@/lib/supabase/client";
 import { splitPieces } from "@/lib/parse";
 
-export type TodoList = { id: string; household_id: string; name: string; emoji: string | null; colour: string | null; sort_order: number; created_at: string };
+export type TodoList = {
+  id: string;
+  household_id: string;
+  name: string;
+  emoji: string | null;
+  colour: string | null;
+  sort_order: number;
+  created_at: string;
+  // Grown-up lists are plain; kids' lists get a theme, stickers and celebrations
+  kind: "adult" | "kids";
+  theme: string | null;
+  owner: string | null;
+};
 export type TodoItem = {
   id: string;
   list_id: string;
@@ -17,6 +29,7 @@ export type TodoItem = {
   sort_order: number;
   created_by: string | null;
   created_at: string;
+  sticker: string | null;
 };
 
 // To-do lists, shared live between the kitchen screen and phones.
@@ -77,7 +90,7 @@ export function useTodos(householdId: string | null) {
   );
 
   const addList = useCallback(
-    (name: string, emoji: string | null) => {
+    (name: string, emoji: string | null, extra: Partial<Pick<TodoList, "kind" | "theme" | "owner">> = {}) => {
       if (!householdId) return null;
       const row: TodoList = {
         id: crypto.randomUUID(),
@@ -85,6 +98,9 @@ export function useTodos(householdId: string | null) {
         name: name.trim().slice(0, 80),
         emoji,
         colour: null,
+        kind: extra.kind ?? "adult",
+        theme: extra.theme ?? null,
+        owner: extra.owner ?? null,
         sort_order: lists.length ? Math.max(...lists.map((l) => l.sort_order)) + 1 : 0,
         created_at: new Date().toISOString(),
       };
@@ -96,7 +112,7 @@ export function useTodos(householdId: string | null) {
   );
 
   const updateList = useCallback(
-    (id: string, patch: Partial<Pick<TodoList, "name" | "emoji">>) => {
+    (id: string, patch: Partial<Pick<TodoList, "name" | "emoji" | "kind" | "theme" | "owner">>) => {
       setLists((prev) => prev.map((l) => (l.id === id ? { ...l, ...patch } : l)));
       void save(() => getSupabase().from("todo_lists").update(patch).eq("id", id));
     },
@@ -131,6 +147,7 @@ export function useTodos(householdId: string | null) {
           sort_order: order++,
           created_by: createdBy,
           created_at: new Date().toISOString(),
+          sticker: null,
         }));
       if (!rows.length) return 0;
       setItems((prev) => [...prev, ...rows]);
@@ -141,7 +158,7 @@ export function useTodos(householdId: string | null) {
   );
 
   const updateItem = useCallback(
-    (id: string, patch: Partial<Pick<TodoItem, "title" | "done" | "done_at" | "assignee" | "due_date">>) => {
+    (id: string, patch: Partial<Pick<TodoItem, "title" | "done" | "done_at" | "assignee" | "due_date" | "sticker">>) => {
       setItems((prev) => prev.map((i) => (i.id === id ? { ...i, ...patch } : i)));
       void save(() => getSupabase().from("todo_items").update(patch).eq("id", id));
     },
