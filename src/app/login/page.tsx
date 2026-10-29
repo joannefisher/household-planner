@@ -1,97 +1,129 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { getSupabase } from "@/lib/supabase/client";
 
-export default function LoginPage() {
+type Mode = "signin" | "create" | "forgot";
+
+const NOTICES: Record<string, string> = {
+  confirmed: "Email confirmed. Sign in with your password.",
+  reset: "That reset link didn't work here. Open the planner in Safari, request a new link, and open it on the same device.",
+  link: "That link has expired or was already used. Sign in with your password.",
+};
+
+function LoginForm() {
+  const params = useSearchParams();
+  const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
-  const [stage, setStage] = useState<"email" | "code">("email");
+  const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(NOTICES[params.get("notice") ?? params.get("error") ?? ""] ?? null);
 
-  async function sendCode(e: React.FormEvent) {
-    e.preventDefault();
-    setBusy(true);
+  function switchTo(m: Mode) {
+    setMode(m);
     setError(null);
-    const { error } = await getSupabase().auth.signInWithOtp({
-      email: email.trim(),
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
-    });
-    setBusy(false);
-    if (error) {
-      setError(
-        error.message.includes("Database error")
-          ? "That email isn't on the household list. Check the spelling, or ask Joanne to add it."
-          : error.message,
-      );
-      return;
-    }
-    setStage("code");
+    setNotice(null);
   }
 
-  async function verify(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     setError(null);
-    const { error } = await getSupabase().auth.verifyOtp({
-      email: email.trim(),
-      token: code.trim(),
-      type: "email",
-    });
-    setBusy(false);
-    if (error) {
-      setError("That code didn't work. Check the latest email, or send a new code.");
+    setNotice(null);
+    const sb = getSupabase();
+    const addr = email.trim();
+    const callback = `${window.location.origin}/auth/callback`;
+
+    if (mode === "signin") {
+      const { error } = await sb.auth.signInWithPassword({ email: addr, password });
+      setBusy(false);
+      if (!error) {
+        window.location.href = "/";
+        return;
+      }
+      if (/not confirmed/i.test(error.message)) setError("Confirm your email first: open the link in the email we sent, then sign in here.");
+      else if (/invalid login/i.test(error.message)) setError("That email and password don't match. If this is your first time, create your password instead.");
+      else setError(error.message);
       return;
     }
-    window.location.href = "/";
+
+    if (mode === "create") {
+      const { data, error } = await sb.auth.signUp({ email: addr, password, options: { emailRedirectTo: callback } });
+      setBusy(false);
+      if (error) {
+        if (/database error/i.test(error.message)) setError("That email isn't on the household list. Check the spelling.");
+        else if (/already registered/i.test(error.message)) setError("You already have a password. Sign in instead.");
+        else setError(error.message);
+        return;
+      }
+      if (data.session) {
+        window.location.href = "/";
+        return;
+      }
+      setNotice(`Nearly done. Open the link in the email sent to ${addr}, then come back and sign in.`);
+      setMode("signin");
+      return;
+    }
+
+    const { error } = await sb.auth.resetPasswordForEmail(addr, { redirectTo: `${callback}?next=/reset` });
+    setBusy(false);
+    if (error) setError(error.message);
+    else setNotice(`Reset link sent to ${addr}. Open it on this device.`);
   }
 
   return (
     <main className="login">
       <div className="login-card">
         <h1 className="login-title">Fisher-Oakley</h1>
-        <p className="login-sub">Sign in to the household planner.</p>
+        <p className="login-sub">
+          {mode === "signin" && "Sign in to the household planner."}
+          {mode === "create" && "First time here? Choose a password."}
+          {mode === "forgot" && "We'll email you a link to set a new password."}
+        </p>
 
-        {stage === "email" ? (
-          <form onSubmit={sendCode} className="login-form">
-            <label htmlFor="email">Your email</label>
-            <input
-              id="email"
-              type="email"
-              autoComplete="email"
-              inputMode="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <button className="btn btn-primary" disabled={busy}>
-              {busy ? "Sending…" : "Email me a sign-in code"}
-            </button>
-          </form>
-        ) : (
-          <form onSubmit={verify} className="login-form">
-            <label htmlFor="code">Code from the email sent to {email}</label>
-            <input
-              id="code"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              pattern="[0-9]{6,8}"
-              required
-              value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-              className="code-input"
-            />
-            <button className="btn btn-primary" disabled={busy}>
-              {busy ? "Signing in…" : "Sign in"}
-            </button>
-            <button type="button" className="btn btn-quiet" onClick={() => setStage("email")}>
-              Use a different email
-            </button>
-          </form>
-        )}
+        <form onSubmit={submit} className="login-form">
+          <label htmlFor="email">Your email</label>
+          <input id="email" type="email" autoComplete="username" inputMode="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+
+          {mode !== "forgot" && (
+            <>
+              <label htmlFor="password">{mode === "create" ? "New password (at least 8 characters)" : "Password"}</label>
+              <input
+                id="password"
+                type="password"
+                autoComplete={mode === "create" ? "new-password" : "current-password"}
+                required
+                minLength={mode === "create" ? 8 : undefined}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </>
+          )}
+
+          <button className="btn btn-primary" disabled={busy}>
+            {busy ? "Please wait…" : mode === "signin" ? "Sign in" : mode === "create" ? "Create password" : "Email me a reset link"}
+          </button>
+        </form>
+
+        {notice && <p className="login-notice" role="status">{notice}</p>}
         {error && <p className="login-error" role="alert">{error}</p>}
+
+        <div className="login-links">
+          {mode !== "signin" && <button className="btn btn-quiet" onClick={() => switchTo("signin")}>Back to sign in</button>}
+          {mode === "signin" && <button className="btn btn-quiet" onClick={() => switchTo("create")}>First time? Create your password</button>}
+          {mode === "signin" && <button className="btn btn-quiet" onClick={() => switchTo("forgot")}>Forgot password</button>}
+        </div>
       </div>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }

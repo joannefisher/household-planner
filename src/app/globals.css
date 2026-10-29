@@ -358,3 +358,6 @@ input:focus, select:focus { border-color: var(--ink); outline: none; }
 .is-wide .family-label { width: auto; }
 .is-wide .today-date { white-space: nowrap; }
 .is-wide .event-title { font-size: 16px; }
+
+.login-notice { margin-top: 16px; padding: 10px 12px; border-radius: 10px; background: var(--surface); }
+.login-links { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 18px; margin-left: -1.15em; }

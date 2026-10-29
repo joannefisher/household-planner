@@ -15,9 +15,10 @@ Locally: copy `.env.example` to `.env.local`, then `npm install` and `npm run de
 
 ## Supabase settings
 
-- **Authentication → URL Configuration:** set Site URL to the Vercel address, and add `https://<vercel address>/auth/callback` to Redirect URLs.
-- **Authentication → Email Templates → Magic Link:** add `{{ .Token }}` to the email body so it includes a 6-digit code. Apps saved to the iPhone Home Screen keep their own sign-in separate from Safari, so typing the code into the app is the reliable way to sign in there.
-- Only the emails on the household's member list can sign in. Anyone else is refused by a database rule.
+- **Authentication → URL Configuration:** Site URL is `https://household-planner-liard.vercel.app`, and `https://household-planner-liard.vercel.app/auth/callback` is in Redirect URLs.
+- Sign-in is email and password. The first time, each adult picks "Create your password" and opens the confirmation email once.
+- Only the emails on the household's member list can create a password. Anyone else is refused by a database rule.
+- Forgotten password: request the reset in Safari and open the email link on the same device, because Home Screen apps keep their sign-in separate from Safari.
 
 ## On the iPad
 
