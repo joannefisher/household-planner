@@ -1,0 +1,34 @@
+/* Styles for the newer features (calendar links, imports, lists, wishlists, recipes, Siri).
+   Kept apart from globals.css; uses the same design tokens. */
+
+/* ---------- Shared sheet bits ---------- */
+.feature-sheet .sheet-top { gap: 8px; }
+.fs-title { flex: 1; min-width: 0; }
+.fx-stack { display: grid; gap: 14px; }
+.fx-big { font-family: var(--display); font-size: 22px; font-weight: 700; margin: 0; line-height: 1.2; }
+.fx-facts { margin: 0; padding-left: 1.2em; color: var(--muted); font-size: 15px; display: grid; gap: 2px; }
+.fx-steps { margin: 0; padding-left: 1.4em; display: grid; gap: 8px; font-size: 16px; }
+.fx-steps li::marker { font-family: var(--display); font-weight: 800; color: var(--primary); }
+.fx-file { display: block !important; cursor: pointer; }
+.fx-sub { display: block; font-size: 14px; color: var(--muted); font-weight: 400; }
+.fx-empty { color: var(--muted); margin: 0; }
+
+.fx-rows { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.fx-row { display: flex; flex-direction: column; gap: 10px; padding: 10px 12px; border-radius: 16px; background: var(--surface-2); }
+.fx-row-head { display: flex; align-items: center; gap: 12px; }
+.fx-row-text { flex: 1; min-width: 0; display: block; text-align: left; }
+.fx-link { width: 100%; border: 0; flex-direction: row; align-items: center; gap: 12px; min-height: 60px; color: var(--ink); }
+.fx-icon { font-size: 24px; width: 40px; text-align: center; flex: none; }
+.fx-chev { font-size: 26px; color: var(--muted); line-height: 1; }
+.fx-sample .fx-row { flex-direction: row; }
+
+.extras { display: grid; gap: 8px; }
+
+/* Calendar links */
+.feed-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.feed-actions .btn { text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; }
+
+/* Segmented control (Shopping / Lists on the kitchen screen, To-dos / Gift ideas on phones) */
+.seg { display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--surface-2); }
+.seg button { flex: 1; border: 0; background: transparent; border-radius: 999px; min-height: 40px; padding: 0 12px; font-family: var(--display); font-weight: 700; font-size: 16px; color: var(--muted); white-space: nowrap; }
+.seg button.is-on { background: var(--ink); color: var(--bg); }

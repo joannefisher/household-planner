@@ -3,6 +3,8 @@ import { NextResponse, type NextRequest } from "next/server";
 
 // Keeps the login session fresh and sends signed-out visitors to /login.
 export async function middleware(request: NextRequest) {
+  // API routes check access themselves (calendar feeds and Siri work without a session)
+  if (request.nextUrl.pathname.startsWith("/api/")) return NextResponse.next();
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(

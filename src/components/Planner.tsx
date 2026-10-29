@@ -9,6 +9,7 @@ import { useShoppingList } from "@/lib/useShoppingList";
 import { Avatar } from "./Avatar";
 import { EventSheet, type SheetRequest } from "./EventSheet";
 import { FamilySheet } from "./FamilySheet";
+import { SettingsExtras } from "./SettingsExtras";
 import { ShoppingList } from "./ShoppingList";
 import { Agenda, WeekGrid } from "./Week";
 
@@ -244,6 +245,7 @@ export function Planner() {
         onUpload={hh.uploadPhoto}
         onRemovePhoto={hh.removePhoto}
         onSignOut={signOut}
+        extra={<SettingsExtras household={household} members={members} me={me} photos={photos} />}
       />
 
       {wide && <NightMode now={now} />}
