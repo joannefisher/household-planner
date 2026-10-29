@@ -6,6 +6,8 @@ export type Member = {
   role: "adult" | "child";
   user_id: string | null;
   sort_order: number;
+  avatar: string | null;
+  photo_path: string | null;
 };
 
 export type Household = {
@@ -37,8 +39,19 @@ export type PlannerEvent = {
   starts_at: string;
   ends_at: string | null;
   all_day: boolean;
+  rrule: string | null;
   location: string | null;
+  notes: string | null;
   event_members: { member_id: string }[];
+};
+
+// One appearance of an event on the calendar; repeating events have many
+export type Occurrence = {
+  key: string;
+  event: PlannerEvent;
+  start: Date;
+  end: Date;
+  memberIds: string[];
 };
 
 export type Dinner = {

@@ -4,10 +4,20 @@ import { useMemo, useRef, useState } from "react";
 import { AISLES, formatQuantity } from "@/lib/parse";
 import type { Member, ShoppingItem } from "@/lib/types";
 import type { useShoppingList } from "@/lib/useShoppingList";
+import { Avatar } from "./Avatar";
 
 type List = ReturnType<typeof useShoppingList>;
 
-export function ShoppingList({ list, members, addedBy }: { list: List; members: Member[]; addedBy: string | null }) {
+type Props = {
+  list: List;
+  members: Member[];
+  photos: Record<string, string>;
+  addedBy: string | null;
+  // On the shared kitchen screen, people tap their face so the list knows who added what
+  onPickAdder?: (id: string) => void;
+};
+
+export function ShoppingList({ list, members, photos, addedBy, onPickAdder }: Props) {
   const [text, setText] = useState("");
   const [flash, setFlash] = useState<string | null>(null);
   const [editing, setEditing] = useState<ShoppingItem | null>(null);
@@ -29,7 +39,7 @@ export function ShoppingList({ list, members, addedBy }: { list: List; members: 
     [toBuy],
   );
 
-  const colourOf = (id: string | null) => members.find((m) => m.id === id)?.colour;
+  const memberOf = (id: string | null) => members.find((m) => m.id === id);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -50,6 +60,25 @@ export function ShoppingList({ list, members, addedBy }: { list: List; members: 
         <h2 className="panel-title">Shopping</h2>
         <span className="list-count">{toBuy.length === 0 ? "Nothing to buy" : `${toBuy.length} to buy`}</span>
       </div>
+
+      {onPickAdder && (
+        <div className="adder" role="group" aria-label="Who's adding?">
+          <span className="adder-label">Who&apos;s adding?</span>
+          {members.map((m) => (
+            <button
+              key={m.id}
+              className={`adder-btn${addedBy === m.id ? " is-on" : ""}`}
+              style={{ ["--c" as string]: m.colour }}
+              aria-pressed={addedBy === m.id}
+              aria-label={m.name}
+              title={m.name}
+              onClick={() => onPickAdder(m.id)}
+            >
+              <Avatar member={m} size={34} photoUrl={photos[m.id]} />
+            </button>
+          ))}
+        </div>
+      )}
 
       <form className="add-bar" onSubmit={submit}>
         <input
@@ -91,7 +120,7 @@ export function ShoppingList({ list, members, addedBy }: { list: List; members: 
             <h3 className="aisle-name">{g.aisle}</h3>
             <ul>
               {g.items.map((i) => (
-                <Row key={i.id} item={i} colour={colourOf(i.added_by)} onToggle={() => list.toggle(i)} onEdit={() => openEdit(i)} />
+                <Row key={i.id} item={i} by={memberOf(i.added_by)} photo={photos[i.added_by ?? ""]} onToggle={() => list.toggle(i)} onEdit={() => openEdit(i)} />
               ))}
             </ul>
           </div>
@@ -105,7 +134,7 @@ export function ShoppingList({ list, members, addedBy }: { list: List; members: 
             </div>
             <ul>
               {trolley.map((i) => (
-                <Row key={i.id} item={i} colour={colourOf(i.added_by)} onToggle={() => list.toggle(i)} onEdit={() => openEdit(i)} />
+                <Row key={i.id} item={i} by={memberOf(i.added_by)} photo={photos[i.added_by ?? ""]} onToggle={() => list.toggle(i)} onEdit={() => openEdit(i)} />
               ))}
             </ul>
           </div>
@@ -133,7 +162,8 @@ export function ShoppingList({ list, members, addedBy }: { list: List; members: 
   );
 }
 
-function Row({ item, colour, onToggle, onEdit }: { item: ShoppingItem; colour?: string; onToggle: () => void; onEdit: () => void }) {
+function Row({ item, by, photo, onToggle, onEdit }: { item: ShoppingItem; by?: Member; photo?: string; onToggle: () => void; onEdit: () => void }) {
+  const colour = by?.colour;
   const qty = formatQuantity(item);
   return (
     <li className={`item${item.checked ? " is-checked" : ""}`}>
@@ -143,6 +173,7 @@ function Row({ item, colour, onToggle, onEdit }: { item: ShoppingItem; colour?: 
         </span>
         <span className="item-name">{item.name}</span>
         {qty && <span className="item-qty">{qty}</span>}
+        {by && <span className="item-by" title={`Added by ${by.name}`}><Avatar member={by} size={22} photoUrl={photo} /></span>}
       </button>
       <button className="item-edit" onClick={onEdit} aria-label={`Edit ${item.name}`}>
         Edit
