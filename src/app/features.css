@@ -251,3 +251,12 @@
 .board-col { display: grid; gap: 14px; align-content: start; min-width: 0; }
 .board-col > * { margin-bottom: 0 !important; }
 .kitem:nth-child(n) { transform: none; }
+
+/* What's in the fridge? */
+.fridge-cta { background: linear-gradient(120deg, color-mix(in srgb, #12a877 18%, var(--surface)), color-mix(in srgb, #3d7bf7 16%, var(--surface))); }
+.fridge { display: grid; gap: 12px; padding: 14px; border-radius: 20px; background: var(--surface-2); }
+.fridge-ideas { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.fridge-idea { background: var(--surface); border-radius: 18px; overflow: hidden; display: flex; flex-direction: column; }
+.fridge-idea img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; }
+.fridge-uses, .fridge-extra { font-size: 13px; color: var(--muted); }
+.fridge-uses { color: #12805d; }

@@ -570,6 +570,7 @@ function Inspire({ d, pickFor, initialQ, meId, onPicked, push }: { d: D; pickFor
 
   return (
     <div className="fx-stack">
+      <FridgeIdeas pickFor={pickFor} busyUrl={busyUrl} onChoose={choose} onNote={async (name) => { if (pickFor) { await d.setNote(pickFor, name); onPicked(pickFor); } }} />
       <form className="add-bar" onSubmit={(e) => { e.preventDefault(); if (q.trim()) { setTheme(null); void load({ q: q.trim() }); } }}>
         <input aria-label="Search BBC Good Food" placeholder="Search, e.g. chicken, curry, salmon" value={q} onChange={(e) => setQ(e.target.value)} enterKeyHint="search" />
         <button className="btn btn-primary" disabled={!q.trim() || loading}>Search</button>
@@ -622,5 +623,92 @@ function FavStar({ on, onToggle, big }: { on: boolean; onToggle: () => void; big
     <button type="button" className={`fav-star${on ? " is-on" : ""}${big ? " is-big" : ""}`} onClick={onToggle} aria-pressed={on} aria-label={on ? "Remove from favourites" : "Add to favourites"} title={on ? "Favourite" : "Add to favourites"}>
       {on ? "★" : "☆"}
     </button>
+  );
+}
+
+type FridgeIdea = { name: string; why: string; uses: string[]; extra: string[]; recipe: Idea | null };
+
+// "What's in the fridge?": Claude suggests dinners from what you've got, each matched to a real recipe
+function FridgeIdeas({ pickFor, busyUrl, onChoose, onNote }: { pickFor?: string; busyUrl: string | null; onChoose: (i: Idea) => void; onNote: (name: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [ideas, setIdeas] = useState<FridgeIdea[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  if (!open) {
+    return (
+      <button type="button" className="inspire-cta fridge-cta" onClick={() => setOpen(true)}>
+        <span className="inspire-spark" aria-hidden="true">🧑‍🍳</span>
+        <span>
+          <strong>What&apos;s in the fridge?</strong>
+          <span className="fx-sub">Tell Claude what you&apos;ve got and get dinner ideas</span>
+        </span>
+        <span className="fx-chev" aria-hidden="true">›</span>
+      </button>
+    );
+  }
+
+  async function ask(e: React.FormEvent) {
+    e.preventDefault();
+    if (!text.trim()) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/recipes/fridge", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ingredients: text }) });
+      const data = await res.json();
+      if (!res.ok) setError(data.error ?? "Couldn't get ideas just now.");
+      setIdeas(data.ideas ?? null);
+    } catch {
+      setError("Couldn't get ideas just now. Check the connection and try again.");
+    }
+    setLoading(false);
+  }
+
+  return (
+    <div className="fridge">
+      <form className="fx-stack" onSubmit={ask}>
+        <label className="field">
+          <span>What have you got in? (fridge, freezer, cupboard)</span>
+          <textarea rows={3} value={text} onChange={(e) => setText(e.target.value)} placeholder="Chicken thighs, peppers, half a bag of rice, cheddar, a tin of tomatoes…" autoFocus />
+        </label>
+        <div className="sheet-actions">
+          <button type="button" className="btn btn-quiet" onClick={() => setOpen(false)}>Close</button>
+          <span className="spacer" />
+          <button className="btn btn-primary" disabled={loading || !text.trim()}>{loading ? "Claude is thinking…" : "Ask Claude"}</button>
+        </div>
+      </form>
+      {error && <p className="fx-result" role="status">{error}</p>}
+      {ideas && (
+        <ul className="fridge-ideas">
+          {ideas.map((i) => (
+            <li key={i.name} className="fridge-idea">
+              {i.recipe?.image_url && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={i.recipe.image_url} alt="" loading="lazy" referrerPolicy="no-referrer" />
+              )}
+              <div className="idea-body">
+                <strong>{i.name}</strong>
+                <span className="fx-sub">{i.why}</span>
+                {i.uses?.length > 0 && <span className="fridge-uses">Uses: {i.uses.join(", ")}</span>}
+                {i.extra?.length > 0 && <span className="fridge-extra">You may need: {i.extra.join(", ")}</span>}
+                <div className="idea-actions">
+                  {i.recipe ? (
+                    <>
+                      <button type="button" className="btn btn-primary" disabled={busyUrl !== null} onClick={() => onChoose(i.recipe!)}>
+                        {busyUrl === i.recipe.url ? "Adding…" : pickFor ? `Have it on ${shortDay(pickFor)}` : "Save recipe"}
+                      </button>
+                      <a className="btn btn-quiet" href={i.recipe.url} target="_blank" rel="noreferrer">Recipe</a>
+                    </>
+                  ) : (
+                    pickFor && <button type="button" className="btn btn-soft" onClick={() => onNote(i.name)}>Have it on {shortDay(pickFor)}</button>
+                  )}
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
