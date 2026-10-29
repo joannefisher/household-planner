@@ -83,22 +83,23 @@ export function SiriSheet({ open, onClose, householdId, me }: { open: boolean; o
         <>
           <h3 className="me-label">1. “Add to shopping”</h3>
           <ol className="fx-steps">
-            <li>Open the <strong>Shortcuts</strong> app, tap <strong>+</strong>, and name the shortcut <strong>Add to shopping</strong>. That name is what you say to Siri.</li>
-            <li>Add the action <strong>Dictate Text</strong>.</li>
-            <li>Add <strong>Get Contents of URL</strong> and paste this as the URL: <Copy text={addUrl} k="add" label="Copy link" /></li>
-            <li>Tap the arrow on that action. Set <strong>Method</strong> to <strong>POST</strong>.</li>
-            <li>Under <strong>Headers</strong>, add one. Key: <code>Authorization</code>. Value: your key from above (starting “Bearer”).</li>
-            <li>Under <strong>Request Body</strong>, choose <strong>JSON</strong>, add a <strong>Text</strong> field with the key <code>text</code>, and for its value pick <strong>Dictated Text</strong>.</li>
-            <li>Add <strong>Speak Text</strong>, set to <strong>Contents of URL</strong>, so Siri says what was added.</li>
-            <li>Try it: “Hey Siri, add to shopping”, then “eggs, bread and bin bags”.</li>
+            <li>Open the <strong>Shortcuts</strong> app and tap <strong>+</strong> (top right). Tap the name at the top, choose <strong>Rename</strong> and call it <strong>Add to shopping</strong>. That name is what you say to Siri.</li>
+            <li>In the <strong>Search Actions</strong> bar at the bottom, type <strong>Ask for Input</strong> and tap it. Tap the blue <strong>Prompt</strong> word and type <em>What do you need?</em> Leave the type as <strong>Text</strong>. (Siri reads this out and listens for your answer.)</li>
+            <li>Search for <strong>Get Contents of URL</strong> and tap it. Tap the blue <strong>URL</strong> word and paste this: <Copy text={addUrl} k="add" label="Copy link" /></li>
+            <li>Tap the small <strong>arrow</strong> on that action to show more. Set <strong>Method</strong> to <strong>POST</strong>.</li>
+            <li>Under <strong>Headers</strong>, tap <strong>Add new header</strong>. Key: <code>Authorization</code>. Value: paste your key from above (it starts with “Bearer”).</li>
+            <li>Under <strong>Request Body</strong>, choose <strong>JSON</strong>, tap <strong>Add new field</strong>, pick <strong>Text</strong>. Key: <code>text</code>. For the value, tap it and choose <strong>Provided Input</strong> from the suggestions above the keyboard.</li>
+            <li>Search for <strong>Speak Text</strong> and add it. It picks up <strong>Contents of URL</strong> on its own, so Siri says what was added. Tap <strong>Done</strong>.</li>
+            <li>Try it: say “Hey Siri, add to shopping”. When Siri asks what you need, say “eggs, bread and bin bags”.</li>
+            <li className="fx-muted">Prefer to dictate? On some iPhones there&apos;s also a <strong>Dictate Text</strong> action (search “dictate”). It can be used instead of Ask for Input; then choose <strong>Dictated Text</strong> as the value in step 6.</li>
           </ol>
 
           <h3 className="me-label">2. “What&apos;s for dinner”</h3>
           <ol className="fx-steps">
             <li>Make another shortcut named <strong>What&apos;s for dinner</strong>.</li>
-            <li>Add <strong>Get Contents of URL</strong> with this URL: <Copy text={dinnerUrl} k="dinner" label="Copy link" /></li>
-            <li>Tap the arrow. Leave <strong>Method</strong> as <strong>GET</strong> and add the same <strong>Authorization</strong> header with your key.</li>
-            <li>Add <strong>Speak Text</strong> with <strong>Contents of URL</strong>.</li>
+            <li>Search for <strong>Get Contents of URL</strong>, add it, and paste this as the URL: <Copy text={dinnerUrl} k="dinner" label="Copy link" /></li>
+            <li>Tap the arrow on it. Leave <strong>Method</strong> as <strong>GET</strong>, and under <strong>Headers</strong> add the same <code>Authorization</code> header with your key.</li>
+            <li>Search for <strong>Speak Text</strong> and add it, then tap <strong>Done</strong>.</li>
             <li>For tomorrow, make a copy named “Dinner tomorrow” and add <code>?day=tomorrow</code> to the end of the link.</li>
           </ol>
           <p className="sheet-hint">Each grown-up makes their own key on their own phone, so the list shows who added what.</p>
