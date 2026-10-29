@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { avatarUri, COLOURS, parseAvatar, randomSeeds, STYLES, type StyleKey } from "@/lib/avatars";
+import { avatarUri, COLOURS } from "@/lib/avatars";
+import { ANIMALS } from "@/lib/animals";
+import {
+  DEFAULT_PORTRAIT, EYE_COLOURS, FAMILY_PORTRAITS, formatPortrait, HAIR_COLOURS, HAIR_STYLES, parsePortrait, SKIN_TONES, TOP_COLOURS,
+  type HairStyle, type Portrait,
+} from "@/lib/portrait";
 import type { Member } from "@/lib/types";
 import { Avatar } from "./Avatar";
 
@@ -71,9 +76,6 @@ export function FamilySheet({ open, members, photos, onClose, onUpdate, onUpload
           <div className="sheet-actions">
             <button type="button" className="btn btn-quiet btn-left" onClick={onSignOut}>Sign out of this device</button>
           </div>
-          <p className="credits">
-            Characters: {Object.values(STYLES).map((s) => s.credit).join("; ")}. Made with DiceBear.
-          </p>
         </div>
       )}
     </dialog>
@@ -81,13 +83,19 @@ export function FamilySheet({ open, members, photos, onClose, onUpdate, onUpload
 }
 
 function MemberEditor({ member, photo, onUpdate, onUpload, onRemovePhoto }: { member: Member; photo?: string } & Pick<Props, "onUpdate" | "onUpload" | "onRemovePhoto">) {
-  const current = parseAvatar(member.avatar, member.name);
-  const [style, setStyle] = useState<StyleKey>(current.style);
-  const [seeds, setSeeds] = useState(() => [current.seed, ...randomSeeds(9)]);
+  const isAnimal = member.avatar?.startsWith("a:") ?? false;
+  const [mode, setMode] = useState<"portrait" | "animal">(isAnimal ? "animal" : "portrait");
+  const [portrait, setPortrait] = useState<Portrait>(() => parsePortrait(member.avatar) ?? FAMILY_PORTRAITS[member.name] ?? DEFAULT_PORTRAIT);
   const [name, setName] = useState(member.name);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const file = useRef<HTMLInputElement>(null);
+
+  function changePortrait(patch: Partial<Portrait>) {
+    const next = { ...portrait, ...patch };
+    setPortrait(next);
+    void onUpdate(member.id, { avatar: formatPortrait(next) });
+  }
 
   async function choosePhoto(f: File | undefined) {
     if (!f) return;
@@ -100,6 +108,17 @@ function MemberEditor({ member, photo, onUpdate, onUpload, onRemovePhoto }: { me
     }
     setBusy(false);
   }
+
+  const swatchRow = (label: string, colours: string[], value: string, key: keyof Portrait) => (
+    <div className="pb-row">
+      <span className="pb-label">{label}</span>
+      <div className="swatches small" role="radiogroup" aria-label={label}>
+        {colours.map((c) => (
+          <button key={c} type="button" role="radio" aria-checked={value === c} aria-label={`${label} ${c}`} className={`swatch${value === c ? " is-on" : ""}`} style={{ background: `#${c}` }} onClick={() => changePortrait({ [key]: c } as Partial<Portrait>)} />
+        ))}
+      </div>
+    </div>
+  );
 
   return (
     <div className="member-editor">
@@ -117,7 +136,7 @@ function MemberEditor({ member, photo, onUpdate, onUpload, onRemovePhoto }: { me
             </button>
             {photo && (
               <button type="button" className="btn btn-quiet" disabled={busy} onClick={() => onRemovePhoto(member)}>
-                Use character
+                Use drawing instead
               </button>
             )}
           </div>
@@ -128,50 +147,70 @@ function MemberEditor({ member, photo, onUpdate, onUpload, onRemovePhoto }: { me
       <h3 className="me-label">Colour</h3>
       <div className="swatches" role="radiogroup" aria-label="Colour">
         {COLOURS.map((c) => (
-          <button
-            key={c}
-            type="button"
-            role="radio"
-            aria-checked={member.colour === c}
-            aria-label={c}
-            className={`swatch${member.colour === c ? " is-on" : ""}`}
-            style={{ background: c }}
-            onClick={() => onUpdate(member.id, { colour: c })}
-          />
+          <button key={c} type="button" role="radio" aria-checked={member.colour === c} aria-label={c} className={`swatch${member.colour === c ? " is-on" : ""}`} style={{ background: c }} onClick={() => onUpdate(member.id, { colour: c })} />
         ))}
       </div>
 
-      <h3 className="me-label">Character{photo ? " (shown when there's no photo)" : ""}</h3>
+      <h3 className="me-label">Picture{photo ? " (shown when there's no photo)" : ""}</h3>
       <div className="style-tabs" role="tablist">
-        {(Object.keys(STYLES) as StyleKey[]).map((k) => (
-          <button key={k} role="tab" aria-selected={style === k} className={`style-tab${style === k ? " is-on" : ""}`} onClick={() => setStyle(k)}>
-            {STYLES[k].label}
-          </button>
-        ))}
-      </div>
-      <div className="characters">
-        {seeds.map((seed) => {
-          const value = `${style}:${seed}`;
-          const on = member.avatar === value;
-          return (
-            <button
-              key={seed}
-              type="button"
-              className={`character${on ? " is-on" : ""}`}
-              style={{ ["--c" as string]: member.colour }}
-              aria-pressed={on}
-              aria-label={`Character ${seed}`}
-              onClick={() => onUpdate(member.id, { avatar: value })}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={avatarUri(value, seed)} alt="" />
-            </button>
-          );
-        })}
-        <button type="button" className="character shuffle" onClick={() => setSeeds([current.seed, ...randomSeeds(9)])}>
-          Shuffle
+        <button role="tab" aria-selected={mode === "portrait"} className={`style-tab${mode === "portrait" ? " is-on" : ""}`} onClick={() => { setMode("portrait"); changePortrait({}); }}>
+          Portrait
+        </button>
+        <button role="tab" aria-selected={mode === "animal"} className={`style-tab${mode === "animal" ? " is-on" : ""}`} onClick={() => setMode("animal")}>
+          Animals
         </button>
       </div>
+
+      {mode === "portrait" ? (
+        <div className="portrait-builder">
+          <div className="pb-row">
+            <span className="pb-label">Age</span>
+            <div className="chips">
+              {(["adult", "child", "baby"] as const).map((a) => (
+                <button key={a} type="button" className={`chip-btn${portrait.age === a ? " is-on" : ""}`} onClick={() => changePortrait({ age: a, ...(a !== "adult" ? { beard: false } : {}) })}>
+                  {a === "adult" ? "Grown-up" : a === "child" ? "Child" : "Baby"}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="pb-row">
+            <span className="pb-label">Hair</span>
+            <div className="chips">
+              {(Object.keys(HAIR_STYLES) as HairStyle[]).map((h) => (
+                <button key={h} type="button" className={`chip-btn${portrait.hair === h ? " is-on" : ""}`} onClick={() => changePortrait({ hair: h })}>
+                  {HAIR_STYLES[h]}
+                </button>
+              ))}
+            </div>
+          </div>
+          {swatchRow("Hair colour", HAIR_COLOURS, portrait.hc, "hc")}
+          {swatchRow("Skin", SKIN_TONES, portrait.skin, "skin")}
+          {swatchRow("Eyes", EYE_COLOURS, portrait.eyes, "eyes")}
+          {swatchRow("Top", TOP_COLOURS, portrait.top, "top")}
+          <div className="pb-row">
+            <span className="pb-label">Extras</span>
+            <div className="chips">
+              <button type="button" className={`chip-btn${portrait.glasses ? " is-on" : ""}`} aria-pressed={portrait.glasses} onClick={() => changePortrait({ glasses: !portrait.glasses })}>Glasses</button>
+              {portrait.age === "adult" && (
+                <button type="button" className={`chip-btn${portrait.beard ? " is-on" : ""}`} aria-pressed={portrait.beard} onClick={() => changePortrait({ beard: !portrait.beard })}>Beard</button>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="characters">
+          {ANIMALS.map((a) => {
+            const value = `a:${a}`;
+            const on = member.avatar === value;
+            return (
+              <button key={a} type="button" className={`character${on ? " is-on" : ""}`} style={{ ["--c" as string]: member.colour }} aria-pressed={on} aria-label={a} onClick={() => onUpdate(member.id, { avatar: value })}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={avatarUri(value, member.name)} alt="" />
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
