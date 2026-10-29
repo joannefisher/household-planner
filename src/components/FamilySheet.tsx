@@ -14,9 +14,10 @@ type Props = {
   onUpload: (m: Member, f: File) => Promise<void>;
   onRemovePhoto: (m: Member) => Promise<void>;
   onSignOut: () => void;
+  extra?: React.ReactNode;
 };
 
-export function FamilySheet({ open, members, photos, onClose, onUpdate, onUpload, onRemovePhoto, onSignOut }: Props) {
+export function FamilySheet({ open, members, photos, onClose, onUpdate, onUpload, onRemovePhoto, onSignOut, extra }: Props) {
   const dialog = useRef<HTMLDialogElement>(null);
   const [selected, setSelected] = useState<string | null>(null);
 
@@ -60,6 +61,8 @@ export function FamilySheet({ open, members, photos, onClose, onUpdate, onUpload
             onUpload={onUpload}
             onRemovePhoto={onRemovePhoto}
           />
+
+          {extra}
 
           <div className="sheet-actions">
             <button type="button" className="btn btn-quiet btn-left" onClick={onSignOut}>Sign out of this device</button>

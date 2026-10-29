@@ -1,0 +1,108 @@
+/* Styles for the newer features (calendar links, imports, lists, wishlists, recipes, Siri).
+   Kept apart from globals.css; uses the same design tokens. */
+
+/* ---------- Shared sheet bits ---------- */
+.feature-sheet .sheet-top { gap: 8px; }
+.fs-title { flex: 1; min-width: 0; }
+.fx-stack { display: grid; gap: 14px; }
+.fx-big { font-family: var(--display); font-size: 22px; font-weight: 700; margin: 0; line-height: 1.2; }
+.fx-facts { margin: 0; padding-left: 1.2em; color: var(--muted); font-size: 15px; display: grid; gap: 2px; }
+.fx-steps { margin: 0; padding-left: 1.4em; display: grid; gap: 8px; font-size: 16px; }
+.fx-steps li::marker { font-family: var(--display); font-weight: 800; color: var(--primary); }
+.fx-file { display: block !important; cursor: pointer; }
+.fx-sub { display: block; font-size: 14px; color: var(--muted); font-weight: 400; }
+.fx-empty { color: var(--muted); margin: 0; }
+
+.fx-rows { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.fx-row { display: flex; flex-direction: column; gap: 10px; padding: 10px 12px; border-radius: 16px; background: var(--surface-2); }
+.fx-row-head { display: flex; align-items: center; gap: 12px; }
+.fx-row-text { flex: 1; min-width: 0; display: block; text-align: left; }
+.fx-link { width: 100%; border: 0; flex-direction: row; align-items: center; gap: 12px; min-height: 60px; color: var(--ink); }
+.fx-icon { font-size: 24px; width: 40px; text-align: center; flex: none; }
+.fx-chev { font-size: 26px; color: var(--muted); line-height: 1; }
+.fx-sample .fx-row { flex-direction: row; }
+
+.extras { display: grid; gap: 8px; }
+
+/* Calendar links */
+.feed-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.feed-actions .btn { text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; }
+
+/* Segmented control (Shopping / Lists on the kitchen screen, To-dos / Gift ideas on phones) */
+.seg { display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--surface-2); }
+.seg button { flex: 1; border: 0; background: transparent; border-radius: 999px; min-height: 40px; padding: 0 12px; font-family: var(--display); font-weight: 700; font-size: 16px; color: var(--muted); white-space: nowrap; }
+.seg button.is-on { background: var(--ink); color: var(--bg); }
+
+/* ---------- Phone tabs: room for a third ---------- */
+.tabs:has(> button:nth-child(3)) { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.tabs:has(> button:nth-child(3)) button { font-size: 16px; padding: 0 6px; }
+
+/* ---------- Kitchen right-hand panel ---------- */
+.side-panel { width: clamp(270px, 24vw, 340px); flex: none; display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+.side-panel > .seg { background: var(--surface); }
+.side-panel > .list { width: auto; flex: 1; }
+.side-panel > .seg button.is-on { background: var(--ink); color: var(--bg); }
+
+/* ---------- To-do lists ---------- */
+.todo-start { display: grid; gap: 12px; justify-items: start; }
+.todo-lists { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 10px; scrollbar-width: none; }
+.todo-lists::-webkit-scrollbar { display: none; }
+.todo-tab { flex: none; display: inline-flex; align-items: center; gap: 6px; border: 2px solid var(--rule); background: var(--surface); border-radius: 999px; min-height: 42px; padding: 0 14px; font-weight: 700; white-space: nowrap; }
+.todo-tab.is-on { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.todo-tab.is-new { border-style: dashed; color: var(--muted); }
+.todo-tab-n { font-family: var(--display); font-size: 13px; min-width: 22px; height: 22px; border-radius: 999px; display: inline-grid; place-items: center; padding: 0 6px; background: color-mix(in srgb, var(--primary) 16%, var(--surface)); color: var(--primary); }
+.todo-tab.is-on .todo-tab-n { background: var(--primary); color: var(--on-primary); }
+.todo-bar { display: flex; gap: 6px; align-items: center; }
+.todo-bar .add-bar { flex: 1; min-width: 0; }
+.todo-more { background: var(--surface-2); font-size: 22px; }
+.todo-items { list-style: none; margin: 0; padding: 0; }
+.todo-tick { border: 0; background: none; padding: 0 12px 0 0; min-height: 52px; min-width: 40px; display: grid; place-items: center start; }
+.todo-main { gap: 10px; }
+.todo-main .item-name { display: flex; flex-direction: column; gap: 1px; }
+.todo-due { font-size: 13px; color: var(--muted); font-family: var(--display); font-weight: 600; }
+.todo-due.is-soon { color: var(--primary); }
+.todo-due.is-late { color: var(--danger); }
+.item.todo-item.is-checked .tick { background: var(--muted); border-color: var(--muted) !important; color: var(--surface); }
+.emoji-pick { display: grid; grid-template-columns: repeat(auto-fill, minmax(48px, 1fr)); gap: 6px; }
+.emoji-btn { aspect-ratio: 1; border: 2px solid var(--rule); background: var(--surface); border-radius: 14px; font-size: 24px; }
+.emoji-btn.is-on { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 12%, var(--surface)); }
+.fx-quick-dates { margin-top: -4px; }
+
+/* ---------- Gift ideas (phones only) ---------- */
+.lists-tab { display: flex; flex-direction: column; gap: 10px; }
+.lists-tab > .seg { background: var(--surface); }
+.wish-info { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; font-size: 14px; color: var(--muted); margin: -2px 2px 10px; }
+.wish-totals { font-family: var(--display); font-weight: 700; color: var(--ink); }
+.wish-open { text-decoration: none; color: var(--primary); font-weight: 700; }
+.todo-tab .avatar { margin-left: -8px; }
+
+/* ---------- Dinners and recipes ---------- */
+.dinner-edit:has(.dinner-recipes) { display: flex; gap: 4px; align-items: center; }
+.dinner-edit:has(.dinner-recipes) input { flex: 1; min-width: 0; }
+.dinner-recipes { flex: none; border: 0; width: 38px; height: 38px; border-radius: 10px; background: color-mix(in srgb, var(--primary) 12%, var(--surface)); font-size: 18px; padding: 0; }
+.recipe-card { padding: 8px 12px 8px 8px; }
+.rc-img { width: 56px; height: 56px; border-radius: 12px; object-fit: cover; flex: none; background: var(--surface); }
+.rc-blank { display: grid; place-items: center; font-size: 24px; }
+.recipe-hero { width: 100%; max-height: 220px; object-fit: cover; border-radius: 18px; display: block; }
+.recipe-ingredients { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; }
+.recipe-method { margin: 0; padding-left: 1.4em; display: grid; gap: 8px; }
+.recipe-method li.is-heading { list-style: none; margin-left: -1.4em; font-family: var(--display); font-weight: 700; color: var(--primary); margin-top: 6px; }
+.servings { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+.servings > span { margin-right: auto; color: var(--muted); font-weight: 400; }
+.servings .icon-btn { background: var(--surface-2); }
+.servings strong { font-family: var(--display); font-size: 24px; min-width: 2ch; text-align: center; }
+.fx-result { margin: 0; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--primary) 10%, var(--surface)); font-size: 15px; }
+.fx-muted { color: var(--muted); font-weight: 400; }
+.week-dinner.is-past { opacity: 0.6; }
+.wd-day { width: 52px; flex: none; font-family: var(--display); font-weight: 700; color: var(--muted); display: grid; line-height: 1.05; }
+.wd-day span { font-size: 22px; color: var(--ink); font-weight: 800; }
+.plan-it { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; }
+.plan-it .field { flex: 1; min-width: 160px; }
+.staples { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.staples li { display: inline-flex; align-items: center; gap: 2px; padding-left: 12px; border-radius: 999px; background: var(--surface-2); font-weight: 700; }
+.staples button { border: 0; background: none; width: 40px; height: 40px; color: var(--muted); }
+
+/* ---------- Siri shortcuts ---------- */
+.siri-copy { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 4px; }
+.siri-copy code, .fx-steps code { font-size: 13px; background: var(--surface-2); border-radius: 8px; padding: 3px 7px; word-break: break-all; }
+.fx-row .siri-copy code { background: var(--surface); }

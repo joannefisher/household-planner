@@ -21,6 +21,7 @@ type Props = {
   now: Date;
   onOpen: (r: SheetRequest) => void;
   onDinner: (date: string, note: string) => void;
+  onDinnerOpen?: (date: string) => void;
 };
 
 // ---------- shared bits ----------
@@ -52,7 +53,7 @@ function Faces({ who, photos, size }: { who: Member[]; photos: Record<string, st
   );
 }
 
-function DinnerCell({ iso, dinner, onDinner, label }: { iso: string; dinner?: Dinner; onDinner: Props["onDinner"]; label: string }) {
+function DinnerCell({ iso, dinner, onDinner, onOpen, label }: { iso: string; dinner?: Dinner; onDinner: Props["onDinner"]; onOpen?: Props["onDinnerOpen"]; label: string }) {
   const text = dinner?.recipes?.title ?? dinner?.note ?? null;
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
@@ -64,11 +65,14 @@ function DinnerCell({ iso, dinner, onDinner, label }: { iso: string; dinner?: Di
     return (
       <form className="dinner-edit" onSubmit={(e) => { e.preventDefault(); done(); }}>
         <input autoFocus aria-label={`Dinner for ${label}`} value={draft} placeholder="Lasagne…" onChange={(e) => setDraft(e.target.value)} onBlur={done} />
+        {onOpen && (
+          <button type="button" className="dinner-recipes" onMouseDown={(e) => e.preventDefault()} onPointerDown={(e) => e.preventDefault()} onClick={() => { setEditing(false); onOpen(iso); }} aria-label={`Pick a recipe for ${label}`} title="Recipes">📖</button>
+        )}
       </form>
     );
   }
   return (
-    <button className={`dinner-btn${text ? "" : " is-empty"}`} onClick={() => { setDraft(text ?? ""); setEditing(true); }}>
+    <button className={`dinner-btn${text ? "" : " is-empty"}`} onClick={() => { if (dinner?.recipe_id && onOpen) return onOpen(iso); setDraft(text ?? ""); setEditing(true); }}>
       {text ?? "+ Dinner"}
     </button>
   );
@@ -114,7 +118,7 @@ function layoutDay(items: Occurrence[], iso: string, startMin: number, endMin: n
   return placed;
 }
 
-export function WeekGrid({ days, occurrences: all, dinners, members, photos, weather, hidden, now, onOpen, onDinner }: Props) {
+export function WeekGrid({ days, occurrences: all, dinners, members, photos, weather, hidden, now, onOpen, onDinner, onDinnerOpen }: Props) {
   const occurrences = all.filter((o) => shown(o, hidden, members));
   const allDay = occurrences.filter((o) => o.event.all_day);
   const timed = occurrences.filter((o) => !o.event.all_day);
@@ -219,7 +223,7 @@ export function WeekGrid({ days, occurrences: all, dinners, members, photos, wea
         <div className="gw-gutter gw-label">Dinner</div>
         {days.map(({ iso, date }) => (
           <div key={iso} className={`gw-dinner-cell${iso === todayIso ? " is-today" : ""}`}>
-            <DinnerCell iso={iso} dinner={dinners.find((d) => d.date === iso)} onDinner={onDinner} label={fmt(date, { weekday: "long" })} />
+            <DinnerCell iso={iso} dinner={dinners.find((d) => d.date === iso)} onDinner={onDinner} onOpen={onDinnerOpen} label={fmt(date, { weekday: "long" })} />
           </div>
         ))}
       </div>
@@ -229,7 +233,7 @@ export function WeekGrid({ days, occurrences: all, dinners, members, photos, wea
 
 // ---------- phones: the week as a list of days ----------
 
-export function Agenda({ days, occurrences: all, dinners, members, photos, weather, hidden, now, onOpen, onDinner }: Props) {
+export function Agenda({ days, occurrences: all, dinners, members, photos, weather, hidden, now, onOpen, onDinner, onDinnerOpen }: Props) {
   const occurrences = all.filter((o) => shown(o, hidden, members));
   const todayIso = isoDay(now);
   return (
@@ -268,7 +272,7 @@ export function Agenda({ days, occurrences: all, dinners, members, photos, weath
             </ul>
             <footer className="ag-dinner">
               <span className="ag-dinner-label" aria-hidden="true">🍽</span>
-              <DinnerCell iso={iso} dinner={dinners.find((d) => d.date === iso)} onDinner={onDinner} label={fmt(date, { weekday: "long" })} />
+              <DinnerCell iso={iso} dinner={dinners.find((d) => d.date === iso)} onDinner={onDinner} onOpen={onDinnerOpen} label={fmt(date, { weekday: "long" })} />
             </footer>
           </article>
         );
