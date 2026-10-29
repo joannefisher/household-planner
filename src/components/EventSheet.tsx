@@ -86,6 +86,7 @@ function EventForm({ request, members, photos, onCancel, onSave, onDelete, onSki
   const titleRef = useRef<HTMLInputElement>(null);
   const [location, setLocation] = useState(ev?.location ?? "");
   const [notes, setNotes] = useState(ev?.notes ?? "");
+  const [reminders, setReminders] = useState<string[]>(ev?.reminders ?? []);
   const [more, setMore] = useState(Boolean(ev?.location || ev?.notes));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -150,6 +151,7 @@ function EventForm({ request, members, photos, onCancel, onSave, onDelete, onSki
         rrule,
         location: location.trim() || null,
         notes: notes.trim() || null,
+        reminders,
         memberIds: everyone ? [] : who,
       });
       onCancel();
@@ -286,6 +288,20 @@ function EventForm({ request, members, photos, onCancel, onSave, onDelete, onSki
           {ends === "date" && <input type="date" value={until} min={date} onChange={(e) => setUntil(e.target.value)} aria-label="Last date" />}
         </div>
       )}
+
+      <div className="field">
+        <span>Remind me</span>
+        <div className="ends-options" role="group" aria-label="Reminders">
+          {([["1d", "1 day before"], ["1w", "1 week before"], ["1m", "1 month before"]] as const).map(([v, l]) => {
+            const on = reminders.includes(v);
+            return (
+              <button key={v} type="button" aria-pressed={on} className={`ends-option${on ? " is-on" : ""}`} onClick={() => setReminders((r) => (on ? r.filter((x) => x !== v) : [...r, v]))}>
+                🔔 {l}
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       {more ? (
         <>

@@ -569,3 +569,13 @@ input:focus, select:focus, textarea:focus { border-color: var(--primary); outlin
 .is-wide .tabs .tab-count { position: absolute; top: 4px; right: 4px; font-size: 11.5px; min-width: 20px; height: 20px; }
 .is-wide .tabs button.is-on .tab-count { background: var(--on-primary); color: var(--primary); }
 .is-wide .tabs .tab-label { font-size: 12.5px; letter-spacing: -0.01em; }
+
+/* Reminders */
+.reminders { display: grid; gap: 8px; margin-bottom: 12px; }
+.is-wide .reminders { grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); }
+.reminder { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 18px; background: var(--today); box-shadow: inset 0 0 0 2px color-mix(in srgb, #f5a524 45%, transparent); }
+.reminder-bell { font-size: 24px; }
+.reminder-text { flex: 1; min-width: 0; display: grid; }
+.reminder-text strong { font-family: var(--display); font-size: 17px; line-height: 1.2; }
+.reminder-text span { font-size: 14px; color: var(--muted); }
+.is-wide .app .reminders, .is-wide .reminders { flex: none; }

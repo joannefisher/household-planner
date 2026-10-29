@@ -42,6 +42,7 @@ export type PlannerEvent = {
   rrule: string | null;
   location: string | null;
   notes: string | null;
+  reminders?: string[];
   event_members: { member_id: string }[];
 };
 

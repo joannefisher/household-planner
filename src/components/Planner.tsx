@@ -9,6 +9,8 @@ import { useShoppingList } from "@/lib/useShoppingList";
 import { Avatar } from "./Avatar";
 import { DinnersSheet, type DinnerRequest } from "./DinnersSheet";
 import { shopForDinner } from "@/lib/shopDinner";
+import { useReminders } from "@/lib/useReminders";
+import { Reminders } from "./Reminders";
 import { EventSheet, type SheetRequest } from "./EventSheet";
 import { FamilySheet } from "./FamilySheet";
 import { ListsTab } from "./ListsTab";
@@ -80,6 +82,7 @@ export function Planner() {
   const week = useWeek(household?.id ?? null, weekStart);
   const list = useShoppingList(household?.id ?? null);
   const weather = useWeather(household?.latitude, household?.longitude);
+  const reminders = useReminders(household?.id ?? null, now);
 
   const [tab, setTab] = useState<"week" | "list" | "lists">("week");
   const chooseTab = (t: "week" | "list" | "lists") => {
@@ -241,6 +244,8 @@ export function Planner() {
           {wide && tab === "week" && <button className="btn btn-primary btn-big add-event" onClick={openNew}>+ Event</button>}
         </div>
       </header>
+
+      <Reminders due={reminders.due} members={members} photos={photos} onDone={reminders.done} onSnooze={reminders.snooze} />
 
       <main className="body">
         {tab === "week" ? (

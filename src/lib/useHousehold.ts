@@ -109,6 +109,7 @@ export type EventDraft = {
   rrule: string | null;
   location: string | null;
   notes: string | null;
+  reminders: string[];
   memberIds: string[];
 };
 
@@ -127,7 +128,7 @@ export function useWeek(householdId: string | null, weekStart: Date) {
     const [{ data: ev }, { data: dn }] = await Promise.all([
       sb
         .from("events")
-        .select("id,title,starts_at,ends_at,all_day,rrule,location,notes,event_members(member_id)")
+        .select("id,title,starts_at,ends_at,all_day,rrule,location,notes,reminders,event_members(member_id)")
         .eq("household_id", householdId)
         .lt("starts_at", end.toISOString())
         .or(`rrule.not.is.null,starts_at.gte.${start.toISOString()},ends_at.gte.${start.toISOString()}`)
@@ -171,6 +172,7 @@ export function useWeek(householdId: string | null, weekStart: Date) {
         ends_at: draft.ends_at,
         all_day: draft.all_day,
         rrule: draft.rrule,
+        reminders: draft.reminders,
         location: draft.location,
         notes: draft.notes,
       };
