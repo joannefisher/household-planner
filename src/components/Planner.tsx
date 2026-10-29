@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { getSupabase } from "@/lib/supabase/client";
 import { addDays, fmt, startOfWeek, weekLabel } from "@/lib/dates";
 import { describe, fetchWeather, type Weather } from "@/lib/weather";
@@ -82,6 +82,27 @@ export function Planner() {
   const [tab, setTab] = useState<"week" | "list" | "lists">("week");
   const [sheet, setSheet] = useState<SheetRequest | null>(null);
   const [familyOpen, setFamilyOpen] = useState(false);
+  const [familyMember, setFamilyMember] = useState<string | null>(null);
+  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const held = useRef(false);
+
+  function editPerson(id: string | null) {
+    setFamilyMember(id);
+    setFamilyOpen(true);
+  }
+  // Press and hold a face to edit that person; a normal tap still shows or hides their events
+  const holdHandlers = (id: string) => ({
+    onPointerDown: () => {
+      held.current = false;
+      holdTimer.current = setTimeout(() => {
+        held.current = true;
+        editPerson(id);
+      }, 550);
+    },
+    onPointerUp: () => holdTimer.current && clearTimeout(holdTimer.current),
+    onPointerLeave: () => holdTimer.current && clearTimeout(holdTimer.current),
+    onContextMenu: (e: React.MouseEvent) => e.preventDefault(),
+  });
   const [dinnerReq, setDinnerReq] = useState<DinnerRequest | null>(null);
   const [hidden, setHidden] = useState<string[]>([]);
   const [addingAs, setAddingAs] = useState<string | null>(null);
@@ -152,13 +173,18 @@ export function Planner() {
             style={{ ["--c" as string]: m.colour }}
             aria-pressed={on}
             title={on ? `Hide ${m.name}'s events` : `Show ${m.name}'s events`}
-            onClick={() => togglePerson(m.id)}
+            onClick={() => (held.current ? (held.current = false) : togglePerson(m.id))}
+            {...holdHandlers(m.id)}
           >
             <Avatar member={m} size={wide ? 58 : 44} photoUrl={photos[m.id]} />
             <span className="person-name">{m.name}</span>
           </button>
         );
       })}
+      <button className="person edit-faces" onClick={() => editPerson(null)} aria-label="Change pictures and colours" title="Change pictures and colours">
+        <span className="edit-faces-icon" style={{ width: wide ? 58 : 44, height: wide ? 58 : 44 }} aria-hidden="true">✎</span>
+        <span className="person-name">Edit</span>
+      </button>
     </div>
   );
 
@@ -193,7 +219,7 @@ export function Planner() {
               <span className="now-temp">{weather.temp}°</span>
             </div>
           )}
-          <button className="icon-btn family-btn" onClick={() => setFamilyOpen(true)} aria-label="Family settings" title="Family">
+          <button className="icon-btn family-btn" onClick={() => editPerson(null)} aria-label="Family settings" title="Family">
             <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Zm7.43-2.53a7.8 7.8 0 0 0 0-1.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.4 7.4 0 0 0-1.68-.97l-.36-2.54A.5.5 0 0 0 14.13 3h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.6.24-1.16.57-1.68.97l-2.39-.96a.5.5 0 0 0-.6.22L2.84 9.51a.5.5 0 0 0 .12.64l2.03 1.58a7.8 7.8 0 0 0 0 1.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.13.22.39.3.6.22l2.39-.96c.52.4 1.08.73 1.68.97l.36 2.54c.04.24.25.42.5.42h3.84c.25 0 .46-.18.5-.42l.36-2.54c.6-.24 1.16-.57 1.68-.97l2.39.96c.22.08.47 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58Z"/></svg>
           </button>
           {wide && <button className="btn btn-primary btn-big add-event" onClick={openNew}>+ Event</button>}
@@ -249,6 +275,7 @@ export function Planner() {
         members={members}
         photos={photos}
         onClose={() => setFamilyOpen(false)}
+        initialMember={familyMember}
         onUpdate={hh.updateMember}
         onUpload={hh.uploadPhoto}
         onRemovePhoto={hh.removePhoto}

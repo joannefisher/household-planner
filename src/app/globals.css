@@ -508,3 +508,9 @@ input:focus, select:focus, textarea:focus { border-color: var(--primary); outlin
 .block.is-short { align-items: center; }
 .block.is-short .block-title { font-size: 13.5px; }
 .block-title { hyphens: manual; }
+
+/* "Edit" button at the end of the family faces */
+.person.edit-faces { opacity: 1; filter: none; }
+.edit-faces-icon { display: grid; place-items: center; border-radius: 50%; border: 2.5px dashed var(--muted); color: var(--muted); font-size: 22px; background: var(--surface); }
+.person.edit-faces .person-name { color: var(--muted); text-decoration: none; }
+.person { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }

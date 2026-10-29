@@ -15,16 +15,20 @@ type Props = {
   onRemovePhoto: (m: Member) => Promise<void>;
   onSignOut: () => void;
   extra?: React.ReactNode;
+  // Opens straight onto this person's character and photo
+  initialMember?: string | null;
 };
 
-export function FamilySheet({ open, members, photos, onClose, onUpdate, onUpload, onRemovePhoto, onSignOut, extra }: Props) {
+export function FamilySheet({ open, members, photos, onClose, onUpdate, onUpload, onRemovePhoto, onSignOut, extra, initialMember }: Props) {
   const dialog = useRef<HTMLDialogElement>(null);
   const [selected, setSelected] = useState<string | null>(null);
 
   useEffect(() => {
-    if (open) dialog.current?.showModal();
-    else dialog.current?.close();
-  }, [open]);
+    if (open) {
+      if (initialMember) setSelected(initialMember);
+      dialog.current?.showModal();
+    } else dialog.current?.close();
+  }, [open, initialMember]);
 
   const member = members.find((m) => m.id === selected) ?? members[0];
 
