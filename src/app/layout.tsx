@@ -4,6 +4,7 @@ import "@fontsource/atkinson-hyperlegible/700.css";
 import "@fontsource-variable/bricolage-grotesque/index.css";
 import "./globals.css";
 import "./features.css";
+import { ReloadOnNewVersion } from "@/components/ReloadOnNewVersion";
 
 export const metadata: Metadata = {
   title: "Fisher-Oakley",
@@ -26,7 +27,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en-GB">
-      <body>{children}</body>
+      <body>
+        <ReloadOnNewVersion />
+        {children}
+      </body>
     </html>
   );
 }
