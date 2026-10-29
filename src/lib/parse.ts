@@ -76,6 +76,15 @@ export function parseItems(text: string): ParsedItem[] {
     });
 }
 
+// Just the splitting, for lists where quantities don't matter (to-dos, gift ideas)
+export function splitPieces(text: string): string[] {
+  return text
+    .split(/,|;|\n|\band\b|&|\bplus\b/i)
+    .map((s) => s.trim().replace(/[.!]+$/, ""))
+    .filter(Boolean)
+    .map((s) => s.charAt(0).toUpperCase() + s.slice(1));
+}
+
 export function formatQuantity(item: { quantity: number | null; unit: string | null }) {
   if (item.quantity == null) return "";
   const q = Number.isInteger(item.quantity) ? String(item.quantity) : String(item.quantity);

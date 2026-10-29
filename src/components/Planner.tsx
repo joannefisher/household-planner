@@ -9,8 +9,10 @@ import { useShoppingList } from "@/lib/useShoppingList";
 import { Avatar } from "./Avatar";
 import { EventSheet, type SheetRequest } from "./EventSheet";
 import { FamilySheet } from "./FamilySheet";
+import { ListsTab } from "./ListsTab";
 import { SettingsExtras } from "./SettingsExtras";
 import { ShoppingList } from "./ShoppingList";
+import { SidePanel } from "./SidePanel";
 import { Agenda, WeekGrid } from "./Week";
 
 const ADDER_KEY = "planner.addingAs";
@@ -76,7 +78,7 @@ export function Planner() {
   const list = useShoppingList(household?.id ?? null);
   const weather = useWeather(household?.latitude, household?.longitude);
 
-  const [tab, setTab] = useState<"week" | "list">("week");
+  const [tab, setTab] = useState<"week" | "list" | "lists">("week");
   const [sheet, setSheet] = useState<SheetRequest | null>(null);
   const [familyOpen, setFamilyOpen] = useState(false);
   const [hidden, setHidden] = useState<string[]>([]);
@@ -205,13 +207,15 @@ export function Planner() {
               </div>
               <WeekGrid {...shared} />
             </div>
-            <ShoppingList list={list} members={members} photos={photos} addedBy={addingAs} onPickAdder={(id) => { setAddingAs(id); writeStore(ADDER_KEY, id); }} />
+            <SidePanel householdId={household.id} members={members} photos={photos} me={me} shopping={<ShoppingList list={list} members={members} photos={photos} addedBy={addingAs} onPickAdder={(id) => { setAddingAs(id); writeStore(ADDER_KEY, id); }} />} />
           </>
         ) : tab === "week" ? (
           <>
             <div className="cal-bar">{weekNav}</div>
             <Agenda {...shared} />
           </>
+        ) : tab === "lists" ? (
+          <ListsTab householdId={household.id} members={members} photos={photos} me={me} />
         ) : (
           <ShoppingList list={list} members={members} photos={photos} addedBy={me?.id ?? null} />
         )}
@@ -223,6 +227,7 @@ export function Planner() {
           <nav className="tabs" aria-label="Sections">
             <button className={tab === "week" ? "is-on" : ""} aria-current={tab === "week"} onClick={() => setTab("week")}>Week</button>
             <button className={tab === "list" ? "is-on" : ""} aria-current={tab === "list"} onClick={() => setTab("list")}>Shopping{toBuy ? ` · ${toBuy}` : ""}</button>
+            <button className={tab === "lists" ? "is-on" : ""} aria-current={tab === "lists"} onClick={() => setTab("lists")}>Lists</button>
           </nav>
         </>
       )}
