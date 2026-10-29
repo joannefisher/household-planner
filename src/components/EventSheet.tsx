@@ -81,6 +81,9 @@ function EventForm({ request, members, photos, onCancel, onSave, onDelete, onSki
   const weekdayOf = (iso: string) => (fromIsoDay(iso).getDay() + 6) % 7;
   const [byDay, setByDay] = useState<number[]>(rule?.byDay.length ? rule.byDay : [weekdayOf(isoDay(baseDate))]);
   const [until, setUntil] = useState(rule?.until ?? "");
+  const [ends, setEnds] = useState<"never" | "date" | "count">(rule?.count ? "count" : rule?.until ? "date" : "never");
+  const [count, setCount] = useState(String(rule?.count ?? 10));
+  const titleRef = useRef<HTMLInputElement>(null);
   const [location, setLocation] = useState(ev?.location ?? "");
   const [notes, setNotes] = useState(ev?.notes ?? "");
   const [more, setMore] = useState(Boolean(ev?.location || ev?.notes));
@@ -107,7 +110,15 @@ function EventForm({ request, members, photos, onCancel, onSave, onDelete, onSki
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
-    if (!title.trim()) return;
+    if (!title.trim()) {
+      setError("Give the event a name first.");
+      titleRef.current?.focus();
+      return;
+    }
+    if (repeat !== "none" && ends === "date" && !until) {
+      setError("Pick the last date, or choose a different end.");
+      return;
+    }
     const [sh, sm] = start.split(":").map(Number);
     const [eh, em] = end.split(":").map(Number);
     const startDate = allDay ? fromIsoDay(date) : fromIsoDay(date, sh, sm);
@@ -121,7 +132,8 @@ function EventForm({ request, members, photos, onCancel, onSave, onDelete, onSki
         freq,
         interval: repeat === "fortnightly" ? 2 : 1,
         byDay: freq === "WEEKLY" ? [...byDay].sort() : [],
-        until: until || null,
+        until: ends === "date" ? until || null : null,
+        count: ends === "count" ? Math.min(Math.max(Number(count) || 1, 1), 500) : null,
         exDates: rule?.exDates ?? [],
       });
     }
@@ -156,7 +168,7 @@ function EventForm({ request, members, photos, onCancel, onSave, onDelete, onSki
   }
 
   return (
-    <form className="sheet-form" onSubmit={save}>
+    <form className="sheet-form" onSubmit={save} noValidate>
       <div className="sheet-top">
         <h2 className="sheet-title">{editing ? "Edit event" : "New event"}</h2>
         <button type="button" className="icon-btn" onClick={onCancel} aria-label="Close">✕</button>
@@ -166,10 +178,14 @@ function EventForm({ request, members, photos, onCancel, onSave, onDelete, onSki
         className="title-input"
         aria-label="What's happening?"
         placeholder="What's happening?"
+        ref={titleRef}
         value={title}
-        onChange={(e) => setTitle(e.target.value)}
+        onChange={(e) => {
+          setTitle(e.target.value);
+          setError(null);
+        }}
         autoFocus={!editing}
-        required
+        enterKeyHint="done"
       />
 
       <fieldset className="who-picker">
@@ -252,10 +268,23 @@ function EventForm({ request, members, photos, onCancel, onSave, onDelete, onSki
       )}
 
       {repeat !== "none" && (
-        <label className="field">
-          <span>Stop repeating after (optional)</span>
-          <input type="date" value={until} min={date} onChange={(e) => setUntil(e.target.value)} />
-        </label>
+        <div className="field">
+          <span>Ends</span>
+          <div className="ends-options" role="radiogroup" aria-label="When the repeats end">
+            {([["never", "Never"], ["count", "After … times"], ["date", "On a date"]] as const).map(([v, l]) => (
+              <button key={v} type="button" role="radio" aria-checked={ends === v} className={`ends-option${ends === v ? " is-on" : ""}`} onClick={() => setEnds(v)}>
+                {l}
+              </button>
+            ))}
+          </div>
+          {ends === "count" && (
+            <label className="ends-count">
+              <input type="number" inputMode="numeric" min={1} max={500} value={count} onChange={(e) => setCount(e.target.value.replace(/\D/g, ""))} aria-label="Number of times" />
+              <span>times</span>
+            </label>
+          )}
+          {ends === "date" && <input type="date" value={until} min={date} onChange={(e) => setUntil(e.target.value)} aria-label="Last date" />}
+        </div>
       )}
 
       {more ? (
@@ -292,7 +321,7 @@ function EventForm({ request, members, photos, onCancel, onSave, onDelete, onSki
           </div>
         )}
         <span className="spacer" />
-        <button className="btn btn-primary btn-big" disabled={busy || !title.trim()}>
+        <button className="btn btn-primary btn-big" disabled={busy}>
           {busy ? "Saving…" : editing ? "Save" : "Add event"}
         </button>
       </div>

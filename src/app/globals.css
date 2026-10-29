@@ -514,3 +514,10 @@ input:focus, select:focus, textarea:focus { border-color: var(--primary); outlin
 .edit-faces-icon { display: grid; place-items: center; border-radius: 50%; border: 2.5px dashed var(--muted); color: var(--muted); font-size: 22px; background: var(--surface); }
 .person.edit-faces .person-name { color: var(--muted); text-decoration: none; }
 .person { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+
+/* Repeat end options */
+.ends-options { display: flex; flex-wrap: wrap; gap: 6px; }
+.ends-option { border: 2px solid var(--rule); background: var(--surface); border-radius: 999px; padding: 8px 14px; font-weight: 700; color: var(--ink); }
+.ends-option.is-on { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+.ends-count { display: flex !important; align-items: center; gap: 10px !important; color: var(--ink) !important; font-size: 17px !important; }
+.ends-count input { width: 96px; text-align: center; font-family: var(--display); font-weight: 700; font-size: 20px; }

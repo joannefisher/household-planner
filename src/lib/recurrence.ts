@@ -1,12 +1,13 @@
 // Repeating events, stored in the events.rrule column in iCalendar style, e.g.
 //   FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,TH;UNTIL=20270131;EXDATE=20261105,20261112
-// EXDATE lists single dates that have been deleted from the series.
+// or with COUNT=10 instead of UNTIL ("10 times", like Outlook). EXDATE lists single dates
+// deleted from the series; as in iCalendar, they still count towards COUNT.
 
 import { addDays, fromIsoDay, isoDay, minutesOfDay } from "./dates";
 import type { Occurrence, PlannerEvent } from "./types";
 
 export type Freq = "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY";
-export type Rule = { freq: Freq; interval: number; byDay: number[]; until: string | null; exDates: string[] };
+export type Rule = { freq: Freq; interval: number; byDay: number[]; until: string | null; count: number | null; exDates: string[] };
 
 export const WEEKDAYS = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
 
@@ -23,6 +24,7 @@ export function parseRule(rrule: string | null): Rule | null {
     interval: Number(parts.INTERVAL ?? 1) || 1,
     byDay: parts.BYDAY ? parts.BYDAY.split(",").map((d) => WEEKDAYS.indexOf(d)).filter((i) => i >= 0) : [],
     until: parts.UNTIL ? expand(parts.UNTIL) : null,
+    count: parts.COUNT ? Math.max(1, Number(parts.COUNT) || 1) : null,
     exDates: parts.EXDATE ? parts.EXDATE.split(",").map(expand) : [],
   };
 }
@@ -31,7 +33,8 @@ export function formatRule(rule: Rule): string {
   const bits = [`FREQ=${rule.freq}`];
   if (rule.interval > 1) bits.push(`INTERVAL=${rule.interval}`);
   if (rule.freq === "WEEKLY" && rule.byDay.length) bits.push(`BYDAY=${rule.byDay.map((i) => WEEKDAYS[i]).join(",")}`);
-  if (rule.until) bits.push(`UNTIL=${compact(rule.until)}`);
+  if (rule.count) bits.push(`COUNT=${rule.count}`);
+  else if (rule.until) bits.push(`UNTIL=${compact(rule.until)}`);
   if (rule.exDates.length) bits.push(`EXDATE=${rule.exDates.map(compact).join(",")}`);
   return bits.join(";");
 }
@@ -44,7 +47,8 @@ export function describeRule(rule: Rule | null): string | null {
     : rule.freq === "WEEKLY" ? `${rule.interval === 2 ? "Every 2 weeks" : "Every week"}${rule.byDay.length ? ` on ${rule.byDay.map((i) => names[i]).join(", ")}` : ""}`
     : rule.freq === "MONTHLY" ? "Every month"
     : "Every year";
-  if (rule.until) s += ` until ${fromIsoDay(rule.until).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`;
+  if (rule.count) s += `, ${rule.count} times`;
+  else if (rule.until) s += ` until ${fromIsoDay(rule.until).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`;
   return s;
 }
 
@@ -90,10 +94,15 @@ export function occurrencesBetween(events: PlannerEvent[], fromIso: string, toIs
     const firstDay = fromIsoDay(isoDay(start));
     const length = end.getTime() - start.getTime();
     const startMinutes = minutesOfDay(start);
-    for (let day = new Date(from); day <= to; day = addDays(day, 1)) {
+    // With a count, walk from the first date so earlier repeats are counted
+    let seen = 0;
+    const walkFrom = rule.count ? firstDay : from;
+    for (let day = new Date(walkFrom); day <= to; day = addDays(day, 1)) {
       const iso = isoDay(day);
-      if (day < firstDay || (rule.until && iso > rule.until) || rule.exDates.includes(iso)) continue;
+      if (day < firstDay || (rule.until && iso > rule.until)) continue;
       if (!matches(rule, firstDay, day)) continue;
+      if (rule.count && ++seen > rule.count) break;
+      if (day < from || rule.exDates.includes(iso)) continue;
       const s = fromIsoDay(iso, Math.floor(startMinutes / 60), startMinutes % 60);
       out.push({ key: `${event.id}:${iso}`, event, start: s, end: new Date(s.getTime() + length), memberIds });
     }

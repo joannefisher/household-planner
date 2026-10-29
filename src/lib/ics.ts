@@ -121,7 +121,8 @@ export function toIcsRule(rrule: string | null, allDay: boolean, startLocal: Ret
   const bits = [`FREQ=${parts.FREQ}`];
   if (parts.INTERVAL && Number(parts.INTERVAL) > 1) bits.push(`INTERVAL=${Number(parts.INTERVAL)}`);
   if (parts.FREQ === "WEEKLY" && parts.BYDAY) bits.push(`BYDAY=${parts.BYDAY}`);
-  if (parts.UNTIL && /^\d{8}$/.test(parts.UNTIL)) {
+  if (parts.COUNT && Number(parts.COUNT) > 0) bits.push(`COUNT=${Number(parts.COUNT)}`);
+  else if (parts.UNTIL && /^\d{8}$/.test(parts.UNTIL)) {
     if (allDay) bits.push(`UNTIL=${parts.UNTIL}`);
     else {
       const y = +parts.UNTIL.slice(0, 4), m = +parts.UNTIL.slice(4, 6), d = +parts.UNTIL.slice(6, 8);
