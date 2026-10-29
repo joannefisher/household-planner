@@ -13,6 +13,7 @@ export type Recipe = {
   servings: number | null;
   ingredients: string[];
   method: string[];
+  favourite: boolean;
   created_at: string;
 };
 
@@ -87,6 +88,14 @@ export function useDinners(householdId: string | null, from: string, to: string,
       return data as Recipe;
     },
     [householdId, load],
+  );
+
+  const setFavourite = useCallback(
+    async (id: string, favourite: boolean) => {
+      setRecipes((list) => list.map((r) => (r.id === id ? { ...r, favourite } : r)));
+      await getSupabase().from("recipes").update({ favourite }).eq("id", id);
+    },
+    [],
   );
 
   const deleteRecipe = useCallback(
@@ -179,5 +188,5 @@ export function useDinners(householdId: string | null, from: string, to: string,
     [householdId, recipes],
   );
 
-  return { recipes, staples, plan, loaded, reload: load, setRecipe, setNote, setServings, saveRecipe, deleteRecipe, importRecipe, addStaples, removeStaple, addToShopping };
+  return { recipes, staples, plan, loaded, reload: load, setFavourite, setRecipe, setNote, setServings, saveRecipe, deleteRecipe, importRecipe, addStaples, removeStaple, addToShopping };
 }

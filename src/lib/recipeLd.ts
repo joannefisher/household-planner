@@ -161,3 +161,27 @@ export function pageTitle(html: string) {
   const t = og?.[1] ?? html.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1];
   return t ? cleanText(t).slice(0, 120) : null;
 }
+
+// A short summary for suggestion cards: name, picture, total time and star rating
+export type RecipeSummary = { title: string; image_url: string | null; minutes: number | null; rating: number | null };
+
+function minutesFrom(v: Json | undefined): number | null {
+  const m = typeof v === "string" ? v.match(/^P(?:\d+D)?T?(?:(\d+)H)?(?:(\d+)M)?/i) : null;
+  if (!m) return null;
+  const total = Number(m[1] ?? 0) * 60 + Number(m[2] ?? 0);
+  return total > 0 ? total : null;
+}
+
+export function recipeSummary(html: string): RecipeSummary | null {
+  for (const block of parseJsonLdBlocks(html)) {
+    const r = findRecipe(block);
+    if (!r) continue;
+    const title = text(r.name ?? r.headline);
+    if (!title) continue;
+    const agg = r.aggregateRating && typeof r.aggregateRating === "object" && !Array.isArray(r.aggregateRating) ? (r.aggregateRating as Obj) : null;
+    const rating = agg ? Number(text(agg.ratingValue)) : NaN;
+    const minutes = minutesFrom(r.totalTime) ?? ((minutesFrom(r.prepTime) ?? 0) + (minutesFrom(r.cookTime) ?? 0) || null);
+    return { title: title.slice(0, 200), image_url: image(r.image ?? r.thumbnailUrl), minutes, rating: Number.isFinite(rating) ? Math.round(rating * 10) / 10 : null };
+  }
+  return null;
+}

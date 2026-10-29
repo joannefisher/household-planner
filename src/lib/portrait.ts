@@ -26,7 +26,7 @@ export const HAIR_STYLES = {
 export type HairStyle = keyof typeof HAIR_STYLES;
 
 export const HAIR_COLOURS = ["2b1d14", "4a2c1a", "6b4423", "8c5a32", "b07a45", "e2bc74", "f1d58c", "b6472a", "9a9a9a", "e8e4dc"];
-export const SKIN_TONES = ["fbe3d2", "f7d9c4", "efc4a4", "e0a982", "c98b62", "a86d47", "7f4f32", "5a3623"];
+export const SKIN_TONES = ["fbe3d2", "f7d9c4", "f2cfb2", "efc4a4", "e0a982", "c98b62", "a86d47", "7f4f32", "5a3623"];
 export const EYE_COLOURS = ["7d6a3a", "5a3a22", "3b2416", "4f86b8", "5aa38a", "6f8f4e", "8a8f98"];
 export const TOP_COLOURS = ["5b3ff2", "3d7bf7", "12a877", "ee4c8a", "ff9f1c", "e5484d", "1f1b3a", "f2f0ea"];
 
@@ -223,7 +223,7 @@ export function portraitSvg(p: Portrait): string {
 // The family as described, used as starting points
 export const FAMILY_PORTRAITS: Record<string, Portrait> = {
   Joanne: { age: "adult", hair: "long-wavy", hc: "6b4423", skin: "f7d9c4", eyes: "7d6a3a", glasses: false, beard: false, top: "3d7bf7" },
-  Aiden: { age: "adult", hair: "short", hc: "3b2416", skin: "dfae88", eyes: "5a3a22", glasses: true, beard: true, top: "12a877" },
+  Aiden: { age: "adult", hair: "short", hc: "3b2416", skin: "f2cfb2", eyes: "5a3a22", glasses: true, beard: true, top: "12a877" },
   Millie: { age: "child", hair: "long-fringe", hc: "f1d58c", skin: "fbe3d2", eyes: "5aa38a", glasses: false, beard: false, top: "ee4c8a" },
   Zara: { age: "baby", hair: "baby", hc: "4a2c1a", skin: "fbe3d2", eyes: "7d6a3a", glasses: false, beard: false, top: "ff9f1c" },
 };

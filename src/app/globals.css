@@ -548,3 +548,24 @@ input:focus, select:focus, textarea:focus { border-color: var(--primary); outlin
 .list.is-full .item-main { min-height: 54px; font-size: 19px; }
 .list.is-full .panel-title { font-size: 34px; }
 .is-wide .top:not(:has(.people)) .clock-block { margin-right: auto; }
+
+/* Tabs: on phones a bar along the bottom (labels and counts); on the kitchen screen a slim rail down the left */
+.tabs .tab-icon { display: none; }
+.tabs button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.tab-count { font-size: 13px; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--primary); color: var(--on-primary); display: inline-grid; place-items: center; }
+
+.app.is-wide { padding-left: calc(108px + env(safe-area-inset-left)); padding-bottom: 16px; }
+.is-wide .tabs {
+  left: calc(14px + env(safe-area-inset-left)); right: auto; top: 50%; bottom: auto;
+  transform: translateY(-50%);
+  width: 80px;
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 8px; border-radius: 28px;
+  background: var(--surface);
+  box-shadow: 0 6px 24px rgb(34 28 69 / 0.12);
+}
+.is-wide .tabs button { position: relative; flex-direction: column; gap: 2px; min-height: 74px; padding: 6px 2px; border-radius: 22px; font-size: 13px; }
+.is-wide .tabs .tab-icon { display: block; font-size: 26px; line-height: 1; }
+.is-wide .tabs .tab-count { position: absolute; top: 4px; right: 4px; font-size: 11.5px; min-width: 20px; height: 20px; }
+.is-wide .tabs button.is-on .tab-count { background: var(--on-primary); color: var(--primary); }
+.is-wide .tabs .tab-label { font-size: 12.5px; letter-spacing: -0.01em; }

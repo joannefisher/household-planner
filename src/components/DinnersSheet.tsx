@@ -14,6 +14,7 @@ type View =
   | { k: "library"; pickFor?: string }
   | { k: "recipe"; id: string; pickFor?: string }
   | { k: "add"; pickFor?: string }
+  | { k: "inspire"; pickFor?: string; q?: string }
   | { k: "staples" };
 
 const STAPLE_IDEAS = ["Salt", "Pepper", "Olive oil", "Vegetable oil", "Plain flour", "Sugar", "Stock cubes", "Dried herbs", "Water"];
@@ -70,6 +71,7 @@ export function DinnersSheet({ request, onClose, householdId, days, meId }: Prop
     : view.k === "library" ? (view.pickFor ? `Pick a recipe for ${shortDay(view.pickFor)}` : "Recipes")
     : view.k === "recipe" ? "Recipe"
     : view.k === "add" ? "Add a recipe"
+    : view.k === "inspire" ? "Inspire me"
     : "Staples";
 
   return (
@@ -80,6 +82,7 @@ export function DinnersSheet({ request, onClose, householdId, days, meId }: Prop
       {view?.k === "recipe" && <RecipeView key={view.id} id={view.id} d={d} pickFor={view.pickFor} onPicked={backToDay} onDeleted={() => back?.()} />}
       {view?.k === "add" && <AddRecipe d={d} pickFor={view.pickFor} onSaved={(r) => replace({ k: "recipe", id: r.id, pickFor: view.pickFor })} />}
       {view?.k === "staples" && <Staples d={d} />}
+      {view?.k === "inspire" && <Inspire key={view.q ?? ""} d={d} pickFor={view.pickFor} initialQ={view.q} meId={meId} onPicked={backToDay} push={push} />}
     </FeatureSheet>
   );
 }
@@ -158,9 +161,11 @@ function DayView({ date, d, meId, push }: { date: string; d: D; meId: string | n
     return (
       <>
         <RecipeCard r={recipe} onClick={() => push({ k: "recipe", id: recipe.id })} />
+        <button type="button" className="btn btn-soft btn-big cook-btn" onClick={() => push({ k: "recipe", id: recipe.id })}>📖 Open the recipe to cook</button>
         <Servings value={people} onChange={(n) => d.setServings(row.id, n)} />
         <ShopButton label="Add ingredients to the shopping list" rows={[{ ...row, servings: people }]} d={d} meId={meId} />
         <div className="sheet-actions">
+          <button type="button" className="btn btn-soft" onClick={() => push({ k: "inspire", pickFor: date })}>✨ Inspire me</button>
           <button type="button" className="btn btn-soft" onClick={() => push({ k: "library", pickFor: date })}>Choose a different recipe</button>
           <button type="button" className="btn btn-quiet" onClick={() => d.setNote(date, "")}>Clear this dinner</button>
         </div>
@@ -171,14 +176,27 @@ function DayView({ date, d, meId, push }: { date: string; d: D; meId: string | n
 
   return (
     <>
+      <button type="button" className="inspire-cta" onClick={() => push({ k: "inspire", pickFor: date })}>
+        <span className="inspire-spark" aria-hidden="true">✨</span>
+        <span>
+          <strong>Inspire me</strong>
+          <span className="fx-sub">Dinner ideas from BBC Good Food</span>
+        </span>
+        <span className="fx-chev" aria-hidden="true">›</span>
+      </button>
       <form className="add-bar" onSubmit={(e) => { e.preventDefault(); void d.setNote(date, note); }}>
         <input aria-label="What's for dinner?" placeholder="What's for dinner?" value={note} onChange={(e) => setNote(e.target.value)} enterKeyHint="done" />
         <button className="btn btn-primary" disabled={note.trim() === (row?.note ?? "")}>Save</button>
       </form>
+      {note.trim().length > 2 && (
+        <button type="button" className="btn btn-soft btn-left find-recipes" onClick={() => { void d.setNote(date, note); push({ k: "inspire", pickFor: date, q: note.trim() }); }}>
+          🔎 Find recipes for “{note.trim()}”
+        </button>
+      )}
       <h3 className="me-label">Or pick a recipe</h3>
       <RecipeList d={d} onPick={(r) => d.setRecipe(date, r.id, r.servings)} limit={6} onMore={() => push({ k: "library", pickFor: date })} />
       <div className="sheet-actions">
-        <button type="button" className="btn btn-soft" onClick={() => push({ k: "add", pickFor: date })}>+ Add a recipe from a link</button>
+        <button type="button" className="btn btn-quiet" onClick={() => push({ k: "add", pickFor: date })}>Paste a recipe link</button>
         <span className="spacer" />
         <button type="button" className="btn btn-quiet" onClick={() => push({ k: "week" })}>Whole week</button>
       </div>
@@ -188,18 +206,28 @@ function DayView({ date, d, meId, push }: { date: string; d: D; meId: string | n
 
 function RecipeList({ d, onPick, limit, onMore }: { d: D; onPick: (r: Recipe) => void; limit?: number; onMore?: () => void }) {
   const [q, setQ] = useState("");
+  const [favsOnly, setFavsOnly] = useState(false);
+  const hasFavs = d.recipes.some((r) => r.favourite);
   const shown = useMemo(() => {
     const t = q.trim().toLowerCase();
-    return d.recipes.filter((r) => !t || r.title.toLowerCase().includes(t) || r.ingredients.some((i) => i.toLowerCase().includes(t)));
-  }, [d.recipes, q]);
+    return d.recipes
+      .filter((r) => (!favsOnly || r.favourite) && (!t || r.title.toLowerCase().includes(t) || r.ingredients.some((i) => i.toLowerCase().includes(t))))
+      .sort((a, b) => Number(b.favourite) - Number(a.favourite));
+  }, [d.recipes, q, favsOnly]);
   if (d.recipes.length === 0) return <p className="fx-empty">No recipes saved yet. Paste a link to one from BBC Good Food, a blog or most recipe sites.</p>;
   const list = limit && !q ? shown.slice(0, limit) : shown;
   return (
     <>
       {d.recipes.length > 5 && <input aria-label="Search recipes" placeholder="Search recipes or ingredients" value={q} onChange={(e) => setQ(e.target.value)} type="search" />}
+      {hasFavs && (
+        <div className="chips">
+          <button type="button" className={`chip-btn${!favsOnly ? " is-on" : ""}`} onClick={() => setFavsOnly(false)}>All recipes</button>
+          <button type="button" className={`chip-btn${favsOnly ? " is-on" : ""}`} onClick={() => setFavsOnly(true)}>★ Favourites</button>
+        </div>
+      )}
       <ul className="fx-rows">
         {list.map((r) => (
-          <li key={r.id}><RecipeCard r={r} onClick={() => onPick(r)} /></li>
+          <li key={r.id} className="fav-row"><RecipeCard r={r} onClick={() => onPick(r)} /><FavStar on={r.favourite} onToggle={() => d.setFavourite(r.id, !r.favourite)} /></li>
         ))}
         {list.length === 0 && <li className="fx-empty">No recipes match.</li>}
       </ul>
@@ -281,7 +309,10 @@ function RecipeView({ id, d, pickFor, onPicked, onDeleted }: { id: string; d: D;
         // eslint-disable-next-line @next/next/no-img-element
         <img className="recipe-hero" src={r.image_url} alt="" referrerPolicy="no-referrer" />
       )}
-      <h3 className="fx-big">{r.title}</h3>
+      <div className="recipe-title-row">
+        <h3 className="fx-big">{r.title}</h3>
+        <FavStar on={r.favourite} onToggle={() => d.setFavourite(r.id, !r.favourite)} big />
+      </div>
       <p className="sheet-hint">
         {[r.servings ? `Serves ${r.servings}` : null].filter(Boolean).join(" · ")}
         {r.source_url && (
@@ -474,5 +505,122 @@ function Staples({ d }: { d: D }) {
         </>
       )}
     </>
+  );
+}
+
+type Idea = { url: string; title: string; image_url: string | null; minutes: number | null; rating: number | null };
+const THEME_CHIPS: [string, string][] = [
+  ["quick", "Quick family dinners"], ["midweek", "Midweek meals"], ["traybake", "Traybakes"], ["onepot", "One-pots"], ["slow", "Slow cooker"],
+  ["airfryer", "Air fryer"], ["pasta", "Pasta"], ["veggie", "Vegetarian"], ["fakeaway", "Fakeaways"], ["batch", "Batch cooking"],
+];
+
+// Suggestions from BBC Good Food; picking one saves the recipe and plans it for the day
+function Inspire({ d, pickFor, initialQ, meId, onPicked, push }: { d: D; pickFor?: string; initialQ?: string; meId: string | null; onPicked: (date: string) => void; push: (v: View) => void }) {
+  const [theme, setTheme] = useState<string | null>(null);
+  const [q, setQ] = useState(initialQ ?? "");
+  const [ideas, setIdeas] = useState<Idea[] | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [busyUrl, setBusyUrl] = useState<string | null>(null);
+  const [alsoShop, setAlsoShop] = useState(true);
+
+  async function load(opts: { theme?: string; q?: string }) {
+    setLoading(true);
+    setMessage(null);
+    const params = new URLSearchParams(opts.q ? { q: opts.q } : opts.theme ? { theme: opts.theme } : {});
+    try {
+      const res = await fetch(`/api/recipes/inspire?${params}`);
+      const data = await res.json();
+      setIdeas(data.ideas ?? []);
+      if (data.theme) setTheme(data.theme);
+      setMessage(data.message ?? data.error ?? null);
+    } catch {
+      setIdeas([]);
+      setMessage("Couldn't get ideas just now. Check the connection and try again.");
+    }
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    void load(initialQ ? { q: initialQ } : {});
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function choose(idea: Idea) {
+    setBusyUrl(idea.url);
+    const res = await d.importRecipe(idea.url);
+    if (!res.recipe) {
+      setBusyUrl(null);
+      setMessage(res.error ?? "That recipe didn't save. Try another one.");
+      return;
+    }
+    if (!pickFor) {
+      setBusyUrl(null);
+      push({ k: "recipe", id: res.recipe.id });
+      return;
+    }
+    await d.setRecipe(pickFor, res.recipe.id, res.recipe.servings);
+    if (alsoShop) {
+      try {
+        await d.addToShopping([{ id: "", date: pickFor, note: null, recipe_id: res.recipe.id, servings: res.recipe.servings }], meId);
+      } catch {}
+    }
+    setBusyUrl(null);
+    onPicked(pickFor);
+  }
+
+  return (
+    <div className="fx-stack">
+      <form className="add-bar" onSubmit={(e) => { e.preventDefault(); if (q.trim()) { setTheme(null); void load({ q: q.trim() }); } }}>
+        <input aria-label="Search BBC Good Food" placeholder="Search, e.g. chicken, curry, salmon" value={q} onChange={(e) => setQ(e.target.value)} enterKeyHint="search" />
+        <button className="btn btn-primary" disabled={!q.trim() || loading}>Search</button>
+      </form>
+      <div className="chips inspire-themes" role="group" aria-label="Ideas by theme">
+        {THEME_CHIPS.map(([k, l]) => (
+          <button key={k} type="button" className={`chip-btn${theme === k ? " is-on" : ""}`} onClick={() => { setQ(""); setTheme(k); void load({ theme: k }); }}>{l}</button>
+        ))}
+        <button type="button" className="chip-btn" onClick={() => { setQ(""); void load(theme ? { theme } : {}); }} title="Show different ideas">↻ More ideas</button>
+      </div>
+      {pickFor && (
+        <label className="check">
+          <input type="checkbox" checked={alsoShop} onChange={(e) => setAlsoShop(e.target.checked)} />
+          Also add the ingredients to the shopping list
+        </label>
+      )}
+      {message && <p className="fx-result" role="status">{message}</p>}
+      {loading && <p className="fx-empty">Finding ideas…</p>}
+      {!loading && ideas && (
+        <ul className="ideas">
+          {ideas.map((i) => (
+            <li key={i.url} className="idea">
+              {i.image_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={i.image_url} alt="" loading="lazy" referrerPolicy="no-referrer" />
+              ) : (
+                <span className="idea-blank" aria-hidden="true">🍽</span>
+              )}
+              <div className="idea-body">
+                <strong>{i.title}</strong>
+                <span className="fx-sub">{[i.minutes ? `${i.minutes >= 60 ? `${Math.floor(i.minutes / 60)} hr ${i.minutes % 60 ? `${i.minutes % 60} min` : ""}` : `${i.minutes} min`}` : null, i.rating ? `★ ${i.rating}` : null].filter(Boolean).join(" · ")}</span>
+                <div className="idea-actions">
+                  <button type="button" className="btn btn-primary" disabled={busyUrl !== null} onClick={() => choose(i)}>
+                    {busyUrl === i.url ? "Adding…" : pickFor ? `Have it on ${shortDay(pickFor)}` : "Save recipe"}
+                  </button>
+                  <a className="btn btn-quiet" href={i.url} target="_blank" rel="noreferrer">View</a>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className="credits">Recipes and photos from BBC Good Food. Tap View to see the full recipe on their site.</p>
+    </div>
+  );
+}
+
+function FavStar({ on, onToggle, big }: { on: boolean; onToggle: () => void; big?: boolean }) {
+  return (
+    <button type="button" className={`fav-star${on ? " is-on" : ""}${big ? " is-big" : ""}`} onClick={onToggle} aria-pressed={on} aria-label={on ? "Remove from favourites" : "Add to favourites"} title={on ? "Favourite" : "Add to favourites"}>
+      {on ? "★" : "☆"}
+    </button>
   );
 }

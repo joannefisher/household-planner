@@ -8,6 +8,7 @@ import { useHousehold, useWeek } from "@/lib/useHousehold";
 import { useShoppingList } from "@/lib/useShoppingList";
 import { Avatar } from "./Avatar";
 import { DinnersSheet, type DinnerRequest } from "./DinnersSheet";
+import { shopForDinner } from "@/lib/shopDinner";
 import { EventSheet, type SheetRequest } from "./EventSheet";
 import { FamilySheet } from "./FamilySheet";
 import { ListsTab } from "./ListsTab";
@@ -113,6 +114,12 @@ export function Planner() {
     onContextMenu: (e: React.MouseEvent) => e.preventDefault(),
   });
   const [dinnerReq, setDinnerReq] = useState<DinnerRequest | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 4000);
+    return () => clearTimeout(t);
+  }, [toast]);
   const [hidden, setHidden] = useState<string[]>([]);
   const [addingAs, setAddingAs] = useState<string | null>(null);
 
@@ -190,10 +197,6 @@ export function Planner() {
           </button>
         );
       })}
-      <button className="person edit-faces" onClick={() => editPerson(null)} aria-label="Change pictures and colours" title="Change pictures and colours">
-        <span className="edit-faces-icon" style={{ width: wide ? 58 : 44, height: wide ? 58 : 44 }} aria-hidden="true">✎</span>
-        <span className="person-name">Edit</span>
-      </button>
     </div>
   );
 
@@ -209,6 +212,10 @@ export function Planner() {
     onOpen: setSheet,
     onDinner: week.setDinnerNote,
     onDinnerOpen: (date: string) => setDinnerReq({ k: "day", date }),
+    onDinnerShop: async (date: string) => {
+      setToast("Adding ingredients…");
+      setToast(await shopForDinner(household.id, date, wide ? addingAs : me?.id ?? null));
+    },
   };
 
   return (
@@ -268,9 +275,19 @@ export function Planner() {
 
       {tab === "week" && !wide && <button className="fab" onClick={openNew} aria-label="Add an event">+</button>}
       <nav className="tabs" aria-label="Sections">
-        <button className={tab === "week" ? "is-on" : ""} aria-current={tab === "week"} onClick={() => chooseTab("week")}>{wide ? "Calendar" : "Week"}</button>
-        <button className={tab === "list" ? "is-on" : ""} aria-current={tab === "list"} onClick={() => chooseTab("list")}>Shopping{toBuy ? ` · ${toBuy}` : ""}</button>
-        <button className={tab === "lists" ? "is-on" : ""} aria-current={tab === "lists"} onClick={() => chooseTab("lists")}>Lists</button>
+        <button className={tab === "week" ? "is-on" : ""} aria-current={tab === "week"} onClick={() => chooseTab("week")}>
+          <span className="tab-icon" aria-hidden="true">📅</span>
+          <span className="tab-label">{wide ? "Calendar" : "Week"}</span>
+        </button>
+        <button className={tab === "list" ? "is-on" : ""} aria-current={tab === "list"} onClick={() => chooseTab("list")}>
+          <span className="tab-icon" aria-hidden="true">🛒</span>
+          <span className="tab-label">Shopping</span>
+          {toBuy > 0 && <span className="tab-count">{toBuy}</span>}
+        </button>
+        <button className={tab === "lists" ? "is-on" : ""} aria-current={tab === "lists"} onClick={() => chooseTab("lists")}>
+          <span className="tab-icon" aria-hidden="true">✅</span>
+          <span className="tab-label">Lists</span>
+        </button>
       </nav>
 
       <EventSheet
@@ -295,6 +312,7 @@ export function Planner() {
         extra={<SettingsExtras household={household} members={members} me={me} photos={photos} onOpenDinners={() => { setFamilyOpen(false); setDinnerReq({ k: "week" }); }} />}
       />
 
+      {toast && <p className="planner-toast" role="status">{toast}</p>}
       <DinnersSheet request={dinnerReq} onClose={() => setDinnerReq(null)} householdId={household.id} days={week.days} meId={wide ? addingAs : me?.id ?? null} />
 
       {wide && <NightMode now={now} />}
