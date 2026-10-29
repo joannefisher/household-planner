@@ -4,8 +4,9 @@ import { useState } from "react";
 import type { Household, Member } from "@/lib/types";
 import { CalendarFeedSheet } from "./CalendarFeedSheet";
 import { CoziImportSheet } from "./CoziImportSheet";
+import { SiriSheet } from "./SiriSheet";
 
-type Which = "feeds" | "cozi" | null;
+type Which = "feeds" | "cozi" | "siri" | null;
 
 // Extra settings shown in the family sheet, each opening its own sheet on top.
 export function SettingsExtras({
@@ -27,6 +28,7 @@ export function SettingsExtras({
 
   const items: { key: Exclude<Which, null> | "dinners"; icon: string; label: string; hint: string }[] = [
     ...(onOpenDinners ? [{ key: "dinners" as const, icon: "🍝", label: "Dinners and recipes", hint: "Recipes, the week's shopping and staples" }] : []),
+    { key: "siri", icon: "🎙️", label: "Siri shortcuts", hint: "Add to the list and ask about dinner by voice" },
     { key: "feeds", icon: "📆", label: "Calendar on your iPhone", hint: "See the planner in the Calendar app" },
     { key: "cozi", icon: "📥", label: "Bring events over from Cozi", hint: "A one-time copy of your Cozi calendar" },
   ];
@@ -50,6 +52,7 @@ export function SettingsExtras({
       </ul>
       <CalendarFeedSheet open={open === "feeds"} onClose={() => setOpen(null)} householdId={household.id} members={members} photos={photos} />
       <CoziImportSheet open={open === "cozi"} onClose={() => setOpen(null)} />
+      {me && <SiriSheet open={open === "siri"} onClose={() => setOpen(null)} householdId={household.id} me={me} />}
     </div>
   );
 }
