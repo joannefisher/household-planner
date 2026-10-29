@@ -32,15 +32,17 @@ const capital = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 export async function readText(request: Request) {
   const type = request.headers.get("content-type") ?? "";
   const raw = await request.text();
-  if (type.includes("application/json") || /^\s*[{"]/.test(raw)) {
+  // A list from Shortcuts may arrive as an array; keep one item per line
+  const flat = (v: unknown): string => (Array.isArray(v) ? v.map(flat).join("\n") : v == null ? "" : String(v));
+  if (type.includes("application/json") || /^\s*[{"[]/.test(raw)) {
     try {
       const j = JSON.parse(raw);
-      if (typeof j === "string") return j;
-      if (j && typeof j === "object") return String(j.text ?? j.items ?? j.Text ?? "");
+      if (typeof j === "string" || Array.isArray(j)) return flat(j);
+      if (j && typeof j === "object") return flat(j.text ?? j.items ?? j.Text ?? j.Items ?? "");
     } catch {
       /* fall through to plain text */
     }
   }
-  if (type.includes("application/x-www-form-urlencoded")) return new URLSearchParams(raw).get("text") ?? "";
+  if (type.includes("application/x-www-form-urlencoded")) return new URLSearchParams(raw).getAll("text").join("\n");
   return raw;
 }

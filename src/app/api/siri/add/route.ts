@@ -1,8 +1,10 @@
 import { parseItems } from "@/lib/parse";
+import { itemsFromSpeech } from "@/lib/spokenItems";
 import { addReply, BAD_KEY, bearer, readText, say } from "@/lib/siri";
 import { getAnonSupabase } from "@/lib/supabase/anon";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 20;
 
 // "Hey Siri, add to shopping": POST the dictated text with Authorization: Bearer <personal key>
 export async function POST(request: Request) {
@@ -10,7 +12,7 @@ export async function POST(request: Request) {
   if (!token) return say(BAD_KEY, 401);
 
   const text = (await readText(request)).slice(0, 1000).trim();
-  const items = parseItems(text).slice(0, 30);
+  const items = parseItems(await itemsFromSpeech(text)).slice(0, 30);
   if (!items.length) return say("I didn't catch anything to add.");
 
   const { data, error } = await getAnonSupabase().rpc("add_shopping_items", { api_token: token, items });
