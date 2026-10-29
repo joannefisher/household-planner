@@ -7,6 +7,7 @@ import { describe, fetchWeather, type Weather } from "@/lib/weather";
 import { useHousehold, useWeek } from "@/lib/useHousehold";
 import { useShoppingList } from "@/lib/useShoppingList";
 import { Avatar } from "./Avatar";
+import { DinnersSheet, type DinnerRequest } from "./DinnersSheet";
 import { EventSheet, type SheetRequest } from "./EventSheet";
 import { FamilySheet } from "./FamilySheet";
 import { ListsTab } from "./ListsTab";
@@ -81,6 +82,7 @@ export function Planner() {
   const [tab, setTab] = useState<"week" | "list" | "lists">("week");
   const [sheet, setSheet] = useState<SheetRequest | null>(null);
   const [familyOpen, setFamilyOpen] = useState(false);
+  const [dinnerReq, setDinnerReq] = useState<DinnerRequest | null>(null);
   const [hidden, setHidden] = useState<string[]>([]);
   const [addingAs, setAddingAs] = useState<string | null>(null);
 
@@ -171,6 +173,7 @@ export function Planner() {
     now,
     onOpen: setSheet,
     onDinner: week.setDinnerNote,
+    onDinnerOpen: (date: string) => setDinnerReq({ k: "day", date }),
   };
 
   return (
@@ -250,8 +253,10 @@ export function Planner() {
         onUpload={hh.uploadPhoto}
         onRemovePhoto={hh.removePhoto}
         onSignOut={signOut}
-        extra={<SettingsExtras household={household} members={members} me={me} photos={photos} />}
+        extra={<SettingsExtras household={household} members={members} me={me} photos={photos} onOpenDinners={() => { setFamilyOpen(false); setDinnerReq({ k: "week" }); }} />}
       />
+
+      <DinnersSheet request={dinnerReq} onClose={() => setDinnerReq(null)} householdId={household.id} days={week.days} meId={wide ? addingAs : me?.id ?? null} />
 
       {wide && <NightMode now={now} />}
     </div>

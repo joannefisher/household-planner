@@ -75,3 +75,29 @@
 .wish-totals { font-family: var(--display); font-weight: 700; color: var(--ink); }
 .wish-open { text-decoration: none; color: var(--primary); font-weight: 700; }
 .todo-tab .avatar { margin-left: -8px; }
+
+/* ---------- Dinners and recipes ---------- */
+.dinner-edit:has(.dinner-recipes) { display: flex; gap: 4px; align-items: center; }
+.dinner-edit:has(.dinner-recipes) input { flex: 1; min-width: 0; }
+.dinner-recipes { flex: none; border: 0; width: 38px; height: 38px; border-radius: 10px; background: color-mix(in srgb, var(--primary) 12%, var(--surface)); font-size: 18px; padding: 0; }
+.recipe-card { padding: 8px 12px 8px 8px; }
+.rc-img { width: 56px; height: 56px; border-radius: 12px; object-fit: cover; flex: none; background: var(--surface); }
+.rc-blank { display: grid; place-items: center; font-size: 24px; }
+.recipe-hero { width: 100%; max-height: 220px; object-fit: cover; border-radius: 18px; display: block; }
+.recipe-ingredients { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; }
+.recipe-method { margin: 0; padding-left: 1.4em; display: grid; gap: 8px; }
+.recipe-method li.is-heading { list-style: none; margin-left: -1.4em; font-family: var(--display); font-weight: 700; color: var(--primary); margin-top: 6px; }
+.servings { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+.servings > span { margin-right: auto; color: var(--muted); font-weight: 400; }
+.servings .icon-btn { background: var(--surface-2); }
+.servings strong { font-family: var(--display); font-size: 24px; min-width: 2ch; text-align: center; }
+.fx-result { margin: 0; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--primary) 10%, var(--surface)); font-size: 15px; }
+.fx-muted { color: var(--muted); font-weight: 400; }
+.week-dinner.is-past { opacity: 0.6; }
+.wd-day { width: 52px; flex: none; font-family: var(--display); font-weight: 700; color: var(--muted); display: grid; line-height: 1.05; }
+.wd-day span { font-size: 22px; color: var(--ink); font-weight: 800; }
+.plan-it { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; }
+.plan-it .field { flex: 1; min-width: 160px; }
+.staples { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.staples li { display: inline-flex; align-items: center; gap: 2px; padding-left: 12px; border-radius: 999px; background: var(--surface-2); font-weight: 700; }
+.staples button { border: 0; background: none; width: 40px; height: 40px; color: var(--muted); }
