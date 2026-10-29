@@ -67,3 +67,11 @@
 .emoji-btn { aspect-ratio: 1; border: 2px solid var(--rule); background: var(--surface); border-radius: 14px; font-size: 24px; }
 .emoji-btn.is-on { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 12%, var(--surface)); }
 .fx-quick-dates { margin-top: -4px; }
+
+/* ---------- Gift ideas (phones only) ---------- */
+.lists-tab { display: flex; flex-direction: column; gap: 10px; }
+.lists-tab > .seg { background: var(--surface); }
+.wish-info { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; font-size: 14px; color: var(--muted); margin: -2px 2px 10px; }
+.wish-totals { font-family: var(--display); font-weight: 700; color: var(--ink); }
+.wish-open { text-decoration: none; color: var(--primary); font-weight: 700; }
+.todo-tab .avatar { margin-left: -8px; }
