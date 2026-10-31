@@ -94,9 +94,9 @@ const r1 = (n: number) => Math.round(n * 10) / 10;
 
 // Geometry for each age: head size and where the features sit
 const GEO = {
-  adult: { cy: 90, rx: 40, ry: 49, jaw: 0.6, eyeDy: 3, eyeDx: 16, eyeW: 8, eyeH: 6.6, iris: 5.4, brow: 13, nose: 19, mouth: 31, neck: 13, shoulder: 12 },
-  child: { cy: 94, rx: 41.5, ry: 46, jaw: 0.76, eyeDy: 6, eyeDx: 16.5, eyeW: 8.4, eyeH: 7.6, iris: 6.2, brow: 13, nose: 15, mouth: 26, neck: 11, shoulder: 10 },
-  baby: { cy: 100, rx: 47, ry: 45, jaw: 0.92, eyeDy: 9, eyeDx: 18.5, eyeW: 9, eyeH: 8.6, iris: 7, brow: 14, nose: 13, mouth: 22, neck: 0, shoulder: 4 },
+  adult: { cy: 90, rx: 41, ry: 48, jaw: 0.7, eyeDy: 5, eyeDx: 15.5, eyeW: 6.3, eyeH: 7.4, iris: 5.4, brow: 13, nose: 15, mouth: 27, neck: 13, shoulder: 12 },
+  child: { cy: 94, rx: 42, ry: 45, jaw: 0.8, eyeDy: 7, eyeDx: 16, eyeW: 6.8, eyeH: 8, iris: 6.2, brow: 13, nose: 13, mouth: 23, neck: 11, shoulder: 10 },
+  baby: { cy: 100, rx: 47, ry: 45, jaw: 0.92, eyeDy: 9, eyeDx: 18, eyeW: 7.4, eyeH: 8.4, iris: 7, brow: 14, nose: 12, mouth: 21, neck: 0, shoulder: 4 },
 } as const;
 
 export function portraitSvg(p: Portrait): string {
@@ -139,7 +139,7 @@ export function portraitSvg(p: Portrait): string {
     `<linearGradient id="hr" x1="0.2" y1="0" x2="0.6" y2="1"><stop offset="0" stop-color="${shade(p.hc, 0.16)}"/><stop offset="0.45" stop-color="${hair}"/><stop offset="1" stop-color="${hairLo}"/></linearGradient>`,
     `<linearGradient id="hb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${shade(p.hc, -0.2)}"/><stop offset="1" stop-color="${shade(p.hc, -0.5)}"/></linearGradient>`,
     `<linearGradient id="tp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${shade(p.top, topLight ? 0.3 : 0.14)}"/><stop offset="1" stop-color="${shade(p.top, topLight ? -0.1 : -0.16)}"/></linearGradient>`,
-    `<radialGradient id="ir" cx="0.5" cy="0.62" r="0.55"><stop offset="0" stop-color="${shade(p.eyes, 0.45)}"/><stop offset="0.55" stop-color="#${p.eyes}"/><stop offset="1" stop-color="${shade(p.eyes, -0.5)}"/></radialGradient>`,
+    `<radialGradient id="ir" cx="0.5" cy="0.62" r="0.6"><stop offset="0" stop-color="${shade(p.eyes, 0.45)}"/><stop offset="0.55" stop-color="#${p.eyes}"/><stop offset="1" stop-color="${shade(p.eyes, -0.5)}"/></radialGradient>`,
     `<linearGradient id="nk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${skinShadow}"/><stop offset="1" stop-color="${skinMid}"/></linearGradient>`,
   ];
   const parts: string[] = [];
@@ -163,7 +163,7 @@ export function portraitSvg(p: Portrait): string {
   const curtain = (side: number, part: number, len: number, wave: boolean, tuck = false) => {
     const x = (d: number) => r1(cx + side * d);
     const outer = wave
-      ? `Q${x(rx + 19)} ${cy + 16} ${x(rx + 11)} ${cy + 34} Q${x(rx + 3)} ${cy + 52} ${x(rx + 13)} ${cy + 70} Q${x(rx + 22)} ${cy + 86} ${x(rx + 14)} ${len}`
+      ? `Q${x(rx + 22)} ${cy + 16} ${x(rx + 13)} ${cy + 34} Q${x(rx + 3)} ${cy + 52} ${x(rx + 15)} ${cy + 70} Q${x(rx + 26)} ${cy + 86} ${x(rx + 16)} ${len}`
       : tuck
         ? `C${x(rx + 12)} ${cy + 14} ${x(rx + 13)} ${len - 14} ${x(rx + 9)} ${len}`
         : `C${x(rx + 13)} ${cy + 24} ${x(rx + 9)} ${cy + 60} ${x(rx + 17)} ${len}`;
@@ -183,8 +183,13 @@ export function portraitSvg(p: Portrait): string {
       break;
     case "long-wavy":
       back.push(longBack(cy + 100, 18));
-      front.push(curtain(-1, cx - 10, cy + 100, true), curtain(1, cx - 10, cy + 100, true));
-      sheen.push(`M${cx - 2} ${T - 4} C${cx + 14} ${T - 4} ${cx + 26} ${T + 2} ${cx + 32} ${T + 14}`);
+      front.push(curtain(-1, cx, cy + 102, true), curtain(1, cx, cy + 102, true));
+      sheen.push(`M${cx - 7} ${T - 3} C${cx - 20} ${T - 1} ${cx - 29} ${T + 6} ${cx - 33} ${T + 17}`, `M${cx + 7} ${T - 3} C${cx + 20} ${T - 1} ${cx + 29} ${T + 6} ${cx + 33} ${T + 17}`);
+      for (const side of [-1, 1]) {
+        const x = (d: number) => r1(cx + side * d);
+        lines.push(`M${x(rx + 3)} ${cy + 4} Q${x(rx + 12)} ${cy + 20} ${x(rx + 6)} ${cy + 36} Q${x(rx - 1)} ${cy + 52} ${x(rx + 8)} ${cy + 70} Q${x(rx + 15)} ${cy + 86} ${x(rx + 8)} ${cy + 98}`);
+        sheen.push(`M${x(rx + 8)} ${cy + 22} Q${x(rx + 10)} ${cy + 30} ${x(rx + 6)} ${cy + 38} M${x(rx + 6)} ${cy + 62} Q${x(rx + 12)} ${cy + 72} ${x(rx + 12)} ${cy + 80}`);
+      }
       break;
     case "long-straight": {
       // side parting, the long side sweeping over the forehead
@@ -299,63 +304,57 @@ export function portraitSvg(p: Portrait): string {
     parts.push(`<path d="M${cx - 12} ${chin - 2} Q${cx} ${chin + 4} ${cx + 12} ${chin - 2}" fill="none" stroke="${shade(p.hc, 0.3)}" stroke-width="3" opacity="0.25" filter="url(#b1)"/>`);
   }
 
-  // ---- Eyes ----
+  // ---- Eyes: big, round and friendly ----
   for (const side of [-1, 1]) {
     const ex = cx + side * g.eyeDx;
-    const w = g.eyeW, h = g.eyeH;
-    const inner = ex - side * w, outer = ex + side * w;
-    const upper = `M${inner} ${eyeY + 1} C${inner + side * w * 0.3} ${eyeY - h * 1.05} ${outer - side * w * 0.45} ${eyeY - h * 1.15} ${outer} ${eyeY - 0.5}`;
-    const eye = `${upper} C${outer - side * w * 0.3} ${eyeY + h * 0.85} ${inner + side * w * 0.35} ${eyeY + h * 0.9} ${inner} ${eyeY + 1} Z`;
+    const erx = g.eyeW, ery = g.eyeH;
+    // soft shading on the lid
+    parts.push(`<ellipse cx="${ex}" cy="${eyeY - ery * 0.6}" rx="${erx + 3}" ry="${ery * 0.7}" fill="${skinShadow}" opacity="0.18" filter="url(#b2)"/>`);
     const clip = side > 0 ? "er" : "el";
-    defs.push(`<clipPath id="${clip}"><path d="${eye}"/></clipPath>`);
-    // soft lid shading above the eye
-    parts.push(`<ellipse cx="${ex}" cy="${eyeY - h * 0.7}" rx="${w + 3}" ry="${h * 0.8}" fill="${skinShadow}" opacity="${adult ? 0.3 : 0.18}" filter="url(#b2)"/>`);
-    parts.push(`<path d="${eye}" fill="#fdfbf8"/>`);
-    parts.push(
-      `<g clip-path="url(#${clip})">` +
-        `<circle cx="${ex + side * 0.4}" cy="${eyeY + 0.6}" r="${g.iris}" fill="url(#ir)"/>` +
-        `<circle cx="${ex + side * 0.4}" cy="${eyeY + 0.6}" r="${g.iris * 0.46}" fill="#120c0a"/>` +
-        `<path d="${upper}" fill="none" stroke="${skinDeep}" stroke-width="4" opacity="0.22" filter="url(#b1)"/>` +
-      `</g>`,
-    );
-    parts.push(`<circle cx="${ex + side * 0.4 + g.iris * 0.38}" cy="${eyeY + 0.6 - g.iris * 0.4}" r="${g.iris * 0.3}" fill="#fff"/>`);
-    parts.push(`<circle cx="${ex + side * 0.4 - g.iris * 0.38}" cy="${eyeY + 0.6 + g.iris * 0.38}" r="${g.iris * 0.13}" fill="#fff" opacity="0.8"/>`);
-    // upper lash line: a filled crescent, thicker towards the outer corner, with a small flick
-    const flick = !p.beard && !baby;
-    parts.push(
-      `<path d="${upper} L${outer + side * (flick ? 2.6 : 0.6)} ${eyeY - (flick ? 3 : 1.6)} C${outer - side * w * 0.45} ${eyeY - h * 1.15 - 2.6} ${inner + side * w * 0.3} ${eyeY - h * 1.05 - 1.4} ${inner - side * 0.4} ${eyeY} Z" fill="${lash}"/>`,
-    );
-    // eyebrows: smooth, tapered
+    defs.push(`<clipPath id="${clip}"><path d="M${ex - erx - 3} ${eyeY - ery - 3} L${ex + erx + 3} ${eyeY - ery - 3} L${ex + erx + 3} ${eyeY + ery * 0.9} Q${ex} ${eyeY + ery * 0.62} ${ex - erx - 3} ${eyeY + ery * 0.9} Z"/></clipPath>`);
+    parts.push(`<g clip-path="url(#${clip})">`);
+    parts.push(`<ellipse cx="${ex}" cy="${eyeY}" rx="${erx}" ry="${ery}" fill="url(#ir)"/>`);
+    parts.push(`<ellipse cx="${ex}" cy="${eyeY + ery * 0.08}" rx="${erx * 0.52}" ry="${ery * 0.55}" fill="#140e0b"/>`);
+    parts.push(`<ellipse cx="${ex}" cy="${eyeY}" rx="${erx}" ry="${ery}" fill="none" stroke="${shade(p.eyes, -0.6)}" stroke-width="1" opacity="0.5"/>`);
+    parts.push(`<circle cx="${ex + side * 0.2 + erx * 0.34}" cy="${eyeY - ery * 0.36}" r="${erx * 0.36}" fill="#fff"/>`);
+    parts.push(`<circle cx="${ex - erx * 0.36}" cy="${eyeY + ery * 0.4}" r="${erx * 0.16}" fill="#fff" opacity="0.85"/>`);
+    parts.push(`</g>`);
+    // happy cheeks push up under the eye
+    parts.push(`<path d="M${ex - erx + 0.5} ${eyeY + ery * 0.86} Q${ex} ${eyeY + ery * 0.64} ${ex + erx - 0.5} ${eyeY + ery * 0.86}" fill="none" stroke="${skinDeep}" stroke-width="1" stroke-linecap="round" opacity="0.25"/>`);
+    // upper lid line, with lashes for those without a beard
+    parts.push(`<path d="M${ex - side * (erx + 0.5)} ${eyeY - 0.5} Q${ex - side * erx * 0.5} ${eyeY - ery - 0.6} ${ex + side * erx * 0.3} ${eyeY - ery - 0.2} Q${ex + side * (erx + 0.4)} ${eyeY - ery * 0.75} ${ex + side * (erx + 1)} ${eyeY - 1}" fill="none" stroke="${lash}" stroke-width="${baby ? 1.4 : 2}" stroke-linecap="round"/>`);
+    if (!p.beard && !baby) {
+      parts.push(`<path d="M${ex + side * (erx + 0.6)} ${eyeY - ery * 0.55} l${side * 2.6} -1.6 M${ex + side * erx * 0.55} ${eyeY - ery - 0.6} l${side * 1.8} -2.4" stroke="${lash}" stroke-width="1.6" stroke-linecap="round"/>`);
+    }
+    // eyebrows: soft, raised, happy arcs
     if (!baby) {
-      const bIn = ex - side * (w + 1.5), bOut = ex + side * (w + 4);
       const th = p.beard ? 3.8 : child ? 2.6 : 3;
-      parts.push(`<path d="M${bIn} ${browY + 2.5} C${bIn + side * 4} ${browY - 2.5} ${bOut - side * 6} ${browY - 3.5} ${bOut} ${browY + 1.5} C${bOut - side * 6} ${browY - 3.5 + th * 0.6} ${bIn + side * 4} ${browY - 2.5 + th} ${bIn} ${browY + 2.5 + th * 0.8} Z" fill="${browCol}" opacity="${fair ? 0.8 : 0.95}"/>`);
+      parts.push(`<path d="M${ex - side * (erx + 1)} ${browY + 2.5} Q${ex + side * 0.5} ${browY - 3} ${ex + side * (erx + 4)} ${browY + 1.5}" fill="none" stroke="${browCol}" stroke-width="${th}" stroke-linecap="round" opacity="${fair ? 0.8 : 0.95}"/>`);
     } else {
-      parts.push(`<path d="M${ex - side * 7} ${browY + 2} Q${ex} ${browY - 2} ${ex + side * 8} ${browY + 2}" fill="none" stroke="${shade(p.hc, -0.1)}" stroke-width="2" stroke-linecap="round" opacity="0.3" filter="url(#b1)"/>`);
+      parts.push(`<path d="M${ex - side * 6} ${browY + 2} Q${ex} ${browY - 2} ${ex + side * 7} ${browY + 2}" fill="none" stroke="${shade(p.hc, -0.1)}" stroke-width="2" stroke-linecap="round" opacity="0.3" filter="url(#b1)"/>`);
     }
   }
 
-  // ---- Nose: soft shadows, no outlines ----
-  const nw = baby ? 5 : child ? 5.5 : 6.5;
-  if (!baby) parts.push(`<path d="M${cx + 3} ${eyeY + 4} C${cx + 5} ${noseY - 10} ${cx + 6} ${noseY - 6} ${cx + nw} ${noseY}" fill="none" stroke="${skinShadow}" stroke-width="3.5" stroke-linecap="round" opacity="0.5" filter="url(#b1)"/>`);
-  parts.push(`<ellipse cx="${cx}" cy="${noseY + 2}" rx="${nw + 1}" ry="${baby ? 3 : 3.4}" fill="${skinShadow}" opacity="0.75" filter="url(#b1)"/>`);
-  parts.push(`<ellipse cx="${cx - nw * 0.55}" cy="${noseY + 2.4}" rx="1.6" ry="1.1" fill="${skinDeep}" opacity="0.55"/>`);
-  parts.push(`<ellipse cx="${cx + nw * 0.55}" cy="${noseY + 2.4}" rx="1.6" ry="1.1" fill="${skinDeep}" opacity="0.55"/>`);
-  parts.push(`<ellipse cx="${cx - 1}" cy="${noseY - 1}" rx="${nw * 0.5}" ry="2.2" fill="#fff" opacity="0.4" filter="url(#b1)"/>`);
+  // ---- Nose: a small soft button ----
+  const nw = baby ? 4.5 : child ? 4.5 : 5.2;
+  parts.push(`<ellipse cx="${cx}" cy="${noseY + 1.5}" rx="${nw + 1}" ry="3" fill="${skinShadow}" opacity="0.7" filter="url(#b1)"/>`);
+  parts.push(`<ellipse cx="${cx - 0.5}" cy="${noseY - 0.5}" rx="${nw * 0.55}" ry="2" fill="#fff" opacity="0.45" filter="url(#b1)"/>`);
 
-  // ---- Mouth: a clean open smile ----
-  const mw = baby ? 6.5 : p.beard ? 11.5 : child ? 11 : 12;
-  const mh = baby ? 4.5 : p.beard ? 7 : 8;
-  const mouth = `M${cx - mw} ${mouthY} C${cx - mw * 0.5} ${mouthY + 1.8} ${cx + mw * 0.5} ${mouthY + 1.8} ${cx + mw} ${mouthY} C${cx + mw * 0.85} ${mouthY + mh} ${cx + mw * 0.45} ${mouthY + mh + 1} ${cx} ${mouthY + mh + 1} C${cx - mw * 0.45} ${mouthY + mh + 1} ${cx - mw * 0.85} ${mouthY + mh} ${cx - mw} ${mouthY} Z`;
+  // ---- Mouth: a wide happy grin ----
+  const mw = baby ? 6 : p.beard ? 11 : child ? 11 : 12;
+  const mh = baby ? 5 : p.beard ? 7 : child ? 9 : 8;
+  const mouth = `M${cx - mw} ${mouthY - 1.5} Q${cx} ${mouthY + 2.5} ${cx + mw} ${mouthY - 1.5} Q${cx + mw * 0.9} ${mouthY + mh + 1.5} ${cx} ${mouthY + mh + 1.5} Q${cx - mw * 0.9} ${mouthY + mh + 1.5} ${cx - mw} ${mouthY - 1.5} Z`;
   defs.push(`<clipPath id="mc"><path d="${mouth}"/></clipPath>`);
-  if (!p.beard) parts.push(`<ellipse cx="${cx}" cy="${mouthY + mh + 5}" rx="${mw * 0.6}" ry="2.5" fill="${skinShadow}" opacity="0.5" filter="url(#b1)"/>`);
-  parts.push(`<path d="${mouth}" fill="#6a2430"/>`);
+  if (!p.beard) parts.push(`<ellipse cx="${cx}" cy="${mouthY + mh + 5}" rx="${mw * 0.5}" ry="2" fill="${skinShadow}" opacity="0.4" filter="url(#b1)"/>`);
+  parts.push(`<path d="${mouth}" fill="#7a2b36" stroke="#7a2b36" stroke-width="1.6" stroke-linejoin="round"/>`);
   parts.push(
     `<g clip-path="url(#mc)">` +
-      (baby ? "" : `<path d="M${cx - mw * 0.8} ${mouthY - 2} L${cx + mw * 0.8} ${mouthY - 2} L${cx + mw * 0.72} ${mouthY + mh * 0.42} Q${cx} ${mouthY + mh * 0.52} ${cx - mw * 0.72} ${mouthY + mh * 0.42} Z" fill="#fbf8f2"/>`) +
-      `<ellipse cx="${cx}" cy="${mouthY + mh + 1.5}" rx="${mw * 0.6}" ry="${mh * 0.45}" fill="#e06a76"/>` +
+      (baby ? "" : `<path d="M${cx - mw} ${mouthY - 3} L${cx + mw} ${mouthY - 3} L${cx + mw} ${mouthY + mh * 0.22} Q${cx} ${mouthY + mh * 0.5} ${cx - mw} ${mouthY + mh * 0.22} Z" fill="#fffaf3"/>`) +
+      `<ellipse cx="${cx}" cy="${mouthY + mh + 2}" rx="${mw * 0.62}" ry="${mh * 0.48}" fill="#ef7f8a"/>` +
     `</g>`,
   );
+  // little dimples at the corners
+  if (!p.beard) parts.push(`<path d="M${cx - mw - 2.2} ${mouthY - 3} q-0.8 1.6 0.4 3 M${cx + mw + 2.2} ${mouthY - 3} q0.8 1.6 -0.4 3" fill="none" stroke="${skinDeep}" stroke-width="1.2" stroke-linecap="round" opacity="0.3"/>`);
   // Moustache over the top lip
   if (p.beard && adult) {
     parts.push(`<path d="M${cx - mw - 4} ${mouthY + 1} C${cx - mw - 2} ${mouthY - 8} ${cx - 5} ${mouthY - 11} ${cx} ${mouthY - 8} C${cx + 5} ${mouthY - 11} ${cx + mw + 2} ${mouthY - 8} ${cx + mw + 4} ${mouthY + 1} C${cx + 8} ${mouthY - 2.5} ${cx + 3} ${mouthY - 2.5} ${cx} ${mouthY - 1.5} C${cx - 3} ${mouthY - 2.5} ${cx - 8} ${mouthY - 2.5} ${cx - mw - 4} ${mouthY + 1} Z" fill="${hair}" filter="url(#b1)"/>`);
@@ -384,7 +383,7 @@ export function portraitSvg(p: Portrait): string {
 
   // ---- Glasses ----
   if (p.glasses) {
-    const w = g.eyeW * 2 + 9, h = g.eyeH * 2 + 10;
+    const w = g.eyeW * 2 + 13, h = g.eyeH * 2 + 8;
     for (const side of [-1, 1]) {
       const ex = cx + side * g.eyeDx;
       parts.push(`<rect x="${ex - w / 2}" y="${eyeY - h / 2}" width="${w}" height="${h}" rx="7" fill="#ffffff" fill-opacity="0.14" stroke="#262230" stroke-width="2.6"/>`);
@@ -398,7 +397,7 @@ export function portraitSvg(p: Portrait): string {
 
 // The family, matched to the family photo, used as starting points
 export const FAMILY_PORTRAITS: Record<string, Portrait> = {
-  Joanne: { age: "adult", hair: "long-parted", hc: "2b1d14", skin: "f7d9c4", eyes: "5a3a22", glasses: false, beard: false, top: "f2f0ea" },
+  Joanne: { age: "adult", hair: "long-wavy", hc: "2b1d14", skin: "f7d9c4", eyes: "5a3a22", glasses: false, beard: false, top: "f2f0ea" },
   Aiden: { age: "adult", hair: "swept", hc: "3b2416", skin: "f2cfb2", eyes: "7d6a3a", glasses: false, beard: true, top: "9aa0a8" },
   Millie: { age: "child", hair: "long-straight", hc: "d9b06a", skin: "fbe3d2", eyes: "6d8fae", glasses: false, beard: false, top: "f6c6d8" },
   Zara: { age: "baby", hair: "baby", hc: "b07a45", skin: "fbe3d2", eyes: "4f86b8", glasses: false, beard: false, top: "f2f0ea" },
