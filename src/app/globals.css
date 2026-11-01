@@ -12,6 +12,7 @@
   --on-primary: #ffffff;
   --everyone: #3b3363;
   --today: #fff4cc;
+  --holiday: #fde4ec;
   --now: #e5484d;
   --danger: #c4322f;
   --display: "Bricolage Grotesque Variable", "Avenir Next", system-ui, sans-serif;
@@ -33,6 +34,7 @@
     --on-primary: #14112a;
     --everyone: #6b62a8;
     --today: #2e2a1a;
+    --holiday: #3a2129;
     --danger: #ff8a85;
     color-scheme: dark;
   }
@@ -164,6 +166,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--primary); outlin
 /* ---------- Phone week: day cards ---------- */
 .agenda { display: grid; gap: 10px; }
 .ag-day { background: var(--surface); border-radius: var(--r-panel); padding: 12px 12px 10px; }
+.ag-day.is-holiday { background: var(--holiday); }
 .ag-day.is-today { box-shadow: inset 0 0 0 3px var(--primary); }
 .ag-day.is-past { opacity: 0.6; }
 .ag-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
@@ -408,6 +411,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--primary); outlin
 .gw-dow { font-family: var(--display); font-weight: 700; font-size: 15px; color: var(--muted); }
 .gw-num { font-family: var(--display); font-weight: 800; font-size: 26px; line-height: 1; font-stretch: 80%; }
 .gw-wx { margin-left: auto; font-family: var(--display); font-size: 13px; color: var(--muted); white-space: nowrap; }
+.gw-day-head.is-holiday, .gw-allday-cell.is-holiday, .gw-col.is-holiday, .gw-dinner-cell.is-holiday { background-color: var(--holiday); }
 .gw-day-head.is-today { background: var(--today); }
 .gw-day-head.is-today .gw-num {
   background: var(--primary);

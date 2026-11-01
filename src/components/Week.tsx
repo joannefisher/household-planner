@@ -45,6 +45,14 @@ function onDay(o: Occurrence, iso: string) {
   return isoDay(o.start) <= iso && iso <= isoDay(o.end);
 }
 
+// School holidays, INSET days and bank holidays are all-day events with "no school" in the
+// title (the school importer names them that way). Those days are shaded pink, whoever is hidden.
+const isNoSchool = (o: Occurrence) => o.event.all_day && /no school/i.test(o.event.title);
+function noSchoolDays(all: Occurrence[], days: Day[]) {
+  const off = all.filter(isNoSchool);
+  return new Set(days.filter(({ iso }) => off.some((o) => onDay(o, iso))).map((d) => d.iso));
+}
+
 function Faces({ who, photos, size }: { who: Member[]; photos: Record<string, string>; size: number }) {
   return (
     <span className="faces">
@@ -144,6 +152,8 @@ export function WeekGrid({ days, occurrences: all, dinners, members, photos, wea
   }, [timed]);
   const hours = Array.from({ length: endHour - startHour }, (_, i) => startHour + i);
   const todayIso = isoDay(now);
+  const offDays = noSchoolDays(all, days);
+  const dayClass = (iso: string) => `${iso === todayIso ? " is-today" : ""}${offDays.has(iso) ? " is-holiday" : ""}`;
   const nowMin = minutesOfDay(now);
   const span = (endHour - startHour) * 60;
 
@@ -154,7 +164,7 @@ export function WeekGrid({ days, occurrences: all, dinners, members, photos, wea
         {days.map(({ iso, date }) => {
           const w = weather?.days.find((d) => d.date === iso);
           return (
-            <div key={iso} className={`gw-day-head${iso === todayIso ? " is-today" : ""}`}>
+            <div key={iso} className={`gw-day-head${dayClass(iso)}`}>
               <span className="gw-dow">{fmt(date, { weekday: "short" })}</span>
               <span className="gw-num">{date.getDate()}</span>
               {w && (
@@ -170,7 +180,7 @@ export function WeekGrid({ days, occurrences: all, dinners, members, photos, wea
       <div className="gw-row gw-allday">
         <div className="gw-gutter gw-label">All day</div>
         {days.map(({ iso, date }) => (
-          <div key={iso} className={`gw-allday-cell${iso === todayIso ? " is-today" : ""}`} onClick={(e) => e.target === e.currentTarget && onOpen({ kind: "new", date })}>
+          <div key={iso} className={`gw-allday-cell${dayClass(iso)}`} onClick={(e) => e.target === e.currentTarget && onOpen({ kind: "new", date })}>
             {allDay.filter((o) => onDay(o, iso)).map((o) => {
               const { who, colour } = whoOf(o, members);
               return (
@@ -195,7 +205,7 @@ export function WeekGrid({ days, occurrences: all, dinners, members, photos, wea
         {days.map(({ iso, date }) => (
           <div
             key={iso}
-            className={`gw-col${iso === todayIso ? " is-today" : ""}`}
+            className={`gw-col${dayClass(iso)}`}
             onClick={(e) => {
               if (e.target !== e.currentTarget) return;
               const rect = e.currentTarget.getBoundingClientRect();
@@ -231,7 +241,7 @@ export function WeekGrid({ days, occurrences: all, dinners, members, photos, wea
       <div className="gw-row gw-dinner">
         <div className="gw-gutter gw-label">Dinner</div>
         {days.map(({ iso, date }) => (
-          <div key={iso} className={`gw-dinner-cell${iso === todayIso ? " is-today" : ""}`}>
+          <div key={iso} className={`gw-dinner-cell${dayClass(iso)}`}>
             <DinnerCell iso={iso} dinner={dinners.find((d) => d.date === iso)} onDinner={onDinner} onOpen={onDinnerOpen} onShop={onDinnerShop} label={fmt(date, { weekday: "long" })} />
           </div>
         ))}
@@ -245,6 +255,7 @@ export function WeekGrid({ days, occurrences: all, dinners, members, photos, wea
 export function Agenda({ days, occurrences: all, dinners, members, photos, weather, hidden, now, onOpen, onDinner, onDinnerOpen, onDinnerShop }: Props) {
   const occurrences = all.filter((o) => shown(o, hidden, members));
   const todayIso = isoDay(now);
+  const offDays = noSchoolDays(all, days);
   return (
     <section className="agenda" aria-label="Week">
       {days.map(({ iso, date }) => {
@@ -252,7 +263,7 @@ export function Agenda({ days, occurrences: all, dinners, members, photos, weath
         const w = weather?.days.find((d) => d.date === iso);
         const past = iso < todayIso;
         return (
-          <article key={iso} className={`ag-day${iso === todayIso ? " is-today" : ""}${past ? " is-past" : ""}`}>
+          <article key={iso} className={`ag-day${iso === todayIso ? " is-today" : ""}${past ? " is-past" : ""}${offDays.has(iso) ? " is-holiday" : ""}`}>
             <header className="ag-head">
               <span className="ag-date">
                 <span className="ag-num">{date.getDate()}</span>

@@ -92,7 +92,11 @@ export function SchoolImportSheet({ open, onClose, householdId, members, photos 
       const res = await fetch("/api/school/read", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) setError(data.error ?? "Couldn't read that file.");
-      else setCal(data.calendar);
+      else {
+        // Daily "School" blocks are off by default: holidays are what stand out (shaded pink)
+        setCal(data.calendar);
+        setSkip(data.calendar.terms.map((_: unknown, i: number) => `t${i}`));
+      }
     } catch (e) {
       setError(e instanceof Error && e.message ? e.message : "Couldn't read that file.");
     }
@@ -240,7 +244,7 @@ export function SchoolImportSheet({ open, onClose, householdId, members, photos 
                     </div>
                   );
                 })}
-                <p className="sheet-hint">Term time becomes a repeating &quot;School&quot; event on weekdays, skipping the days off. Check the dates against the original; Claude can misread things.</p>
+                <p className="sheet-hint">Holidays and days off are shaded pink on the calendar. Tick term time if you also want a repeating &quot;School&quot; event on weekdays. Check the dates against the original; Claude can misread things.</p>
               </>
             )}
             <div className="sheet-actions">
