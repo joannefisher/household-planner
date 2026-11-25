@@ -7,6 +7,7 @@ import type { Member } from "@/lib/types";
 import { useTodos, type TodoItem, type TodoList } from "@/lib/useTodos";
 import { Avatar } from "./Avatar";
 import { FeatureSheet } from "./FeatureSheet";
+import { InlineText } from "./InlineText";
 
 const EMOJIS = ["✅", "🏠", "🧹", "🛠️", "🎒", "🧳", "🎄", "🎂", "🐶", "🚗", "💼", "🌱", "📚", "💊", "🎁", "⭐"];
 const STARTERS: [string, string][] = [["🏠", "Jobs around the house"], ["🎒", "School"], ["🧳", "Holiday packing"]];
@@ -186,11 +187,12 @@ function AdultCard({ list, todos, members, photos, me, today, onEdit, onSettings
               <button className="lrow-tick" onClick={() => todos.toggle(i)} aria-label={`Mark ${i.title} as done`}>
                 <span className="tick" aria-hidden="true" style={{ borderColor: who?.colour }} />
               </button>
-              <button className="lrow-main" onClick={() => onEdit(i)}>
-                <span className="lrow-title">{i.title}</span>
-                {due && <span className={`todo-due ${due.tone}`}>{due.text}</span>}
-              </button>
+              <div className="lrow-main">
+                <InlineText className="lrow-title" value={i.title} label="To-do" maxLength={300} onSave={(title) => todos.updateItem(i.id, { title })} />
+                {due && <button className={`todo-due ${due.tone}`} onClick={() => onEdit(i)}>{due.text}</button>}
+              </div>
               {who && <Avatar member={who} size={28} photoUrl={photos[who.id]} />}
+              <button className="lrow-more" onClick={() => onEdit(i)} aria-label={`More for ${i.title}: who, due date, delete`} title="Who, due date, delete">⋯</button>
             </li>
           );
         })}
@@ -273,7 +275,7 @@ function KidsCard({ list, todos, members, photos, me, onSettings }: { list: Todo
               <button className={`kitem-sticker${i.sticker ? "" : " is-empty"}`} onClick={() => setTray((t) => (t === i.id ? null : i.id))} aria-label={i.sticker ? `Change sticker for ${i.title}` : `Add a sticker to ${i.title}`}>
                 {i.sticker ?? "＋"}
               </button>
-              <span className="kitem-title">{i.title}</span>
+              <InlineText className="kitem-title" value={i.title} label="Thing on the list" maxLength={300} onSave={(title) => todos.updateItem(i.id, { title })} />
               <button className="kitem-tick" onClick={() => tick(i)} aria-pressed={i.done} aria-label={i.done ? `Not done yet: ${i.title}` : `Done: ${i.title}`}>
                 {i.done ? "⭐" : ""}
               </button>

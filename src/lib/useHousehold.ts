@@ -113,18 +113,22 @@ export type EventDraft = {
   memberIds: string[];
 };
 
-export function useWeek(householdId: string | null, weekStart: Date) {
+// Events and dinners for a run of days: a week (7) or a month view (35 or 42)
+export function useWeek(householdId: string | null, weekStart: Date, length = 7) {
   const [events, setEvents] = useState<PlannerEvent[]>([]);
   const [dinners, setDinners] = useState<Dinner[]>([]);
-  const days = useMemo(() => weekDays(weekStart), [weekStart]);
+  const days = useMemo(
+    () => (length === 7 ? weekDays(weekStart) : Array.from({ length }, (_, i) => ({ iso: isoDay(addDays(weekStart, i)), date: addDays(weekStart, i) }))),
+    [weekStart, length],
+  );
   const from = days[0].iso;
-  const to = days[6].iso;
+  const to = days[days.length - 1].iso;
 
   const load = useCallback(async () => {
     if (!householdId) return;
     const sb = getSupabase();
     const start = new Date(`${from}T00:00:00`);
-    const end = addDays(start, 7);
+    const end = addDays(start, length);
     const [{ data: ev }, { data: dn }] = await Promise.all([
       sb
         .from("events")
@@ -137,14 +141,14 @@ export function useWeek(householdId: string | null, weekStart: Date) {
     ]);
     setEvents((ev ?? []) as unknown as PlannerEvent[]);
     setDinners((dn ?? []) as unknown as Dinner[]);
-  }, [householdId, from, to]);
+  }, [householdId, from, to, length]);
 
   useEffect(() => {
     if (!householdId) return;
     void load();
     const sb = getSupabase();
     const channel = sb
-      .channel(`week-${householdId}-${from}`)
+      .channel(`week-${householdId}-${from}-${length}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "events", filter: `household_id=eq.${householdId}` }, () => void load())
       .on("postgres_changes", { event: "*", schema: "public", table: "event_members" }, () => void load())
       .on("postgres_changes", { event: "*", schema: "public", table: "meal_plan", filter: `household_id=eq.${householdId}` }, () => void load())
@@ -157,7 +161,7 @@ export function useWeek(householdId: string | null, weekStart: Date) {
       clearInterval(timer);
       document.removeEventListener("visibilitychange", onVisible);
     };
-  }, [householdId, from, load]);
+  }, [householdId, from, length, load]);
 
   const occurrences = useMemo(() => occurrencesBetween(events, from, to), [events, from, to]);
 

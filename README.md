@@ -44,6 +44,10 @@ The screen dims itself from 22:00 to 06:30; tap it to wake it for two minutes.
 - **Lists**: to-do lists on phones (third tab) and on the kitchen screen (Shopping / Lists switch).
 - **Gift ideas**: wishlists under the phone Lists tab, for signed-in adults only. They never show on the kitchen screen (900px and wider).
 - **Dinners and recipes**: tap the 📖 by a dinner, or Family → Dinners and recipes. Paste a recipe link to save it, plan it for a day, then add its ingredients (scaled, staples left off, merged with the list) to the shopping list.
+- **Week / Month**: switch at the top of the calendar. The month shows each day's events as bars in each person's colour (titles on the kitchen screen); tap a day to open its week.
+- **Reminders**: 1 hour, 1 day, 1 week or 1 month before. They show as cards on screen, and as alerts on iPhones subscribed to the calendar if Remove Alerts is off for that calendar.
+- **Daily to-dos**: under each day. Unticked ones carry over to today until done. "Regular jobs" repeat daily, weekly, fortnightly or monthly; if one isn't ticked, it carries over instead of piling up (tables `day_todos`, `day_todo_repeats`).
+- **Editing text**: tap the words of a shopping item or list item to change them; "⋯" opens the rest.
 - **Siri shortcuts**: each adult makes their own key in Family → Siri shortcuts and follows the steps there to build "Add to shopping" and "What's for dinner" in the Shortcuts app.
 
 Routes that work without signing in check a secret token in the database instead: `/api/calendar/[token]` (`calendar_feed()`), `/api/siri/add` (`add_shopping_items()`) and `/api/siri/dinner` (`dinner_tonight()`). New styles live in `src/app/features.css`.

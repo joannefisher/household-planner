@@ -95,11 +95,16 @@ export function CalendarFeedSheet({ open, onClose, householdId, members, photos 
       </ul>
       {error && <p className="login-error" role="alert">{error}</p>}
 
+      <h3 className="me-label">🔔 Reminders as iPhone alerts</h3>
+      <p className="sheet-hint">
+        Events with a reminder (1 hour, 1 day, 1 week or 1 month before) also alert on the iPhone, as long as <strong>Remove Alerts</strong> is off for this calendar. The iPhone asks when you add it. If it&apos;s already added: Settings → Calendar → Accounts → Subscribed Calendars → the planner calendar → turn <strong>Remove Alerts</strong> off. The iPhone picks up new reminders when it next refreshes the calendar, so set Fetch New Data to every 15 minutes (step 4 below).
+      </p>
+
       <h3 className="me-label">Adding it by hand</h3>
       <ol className="fx-steps">
         <li>Tap <strong>Copy link</strong> for the person you want.</li>
         <li>Open the iPhone <strong>Settings</strong> app, then <strong>Calendar</strong> → <strong>Accounts</strong> → <strong>Add Account</strong> → <strong>Other</strong>.</li>
-        <li>Tap <strong>Add Subscribed Calendar</strong>, paste the link, tap <strong>Next</strong>, then <strong>Save</strong>.</li>
+        <li>Tap <strong>Add Subscribed Calendar</strong>, paste the link, tap <strong>Next</strong>, turn <strong>Remove Alerts</strong> off, then <strong>Save</strong>.</li>
         <li>To get changes sooner, go to <strong>Calendar</strong> → <strong>Accounts</strong> → <strong>Fetch New Data</strong> and choose every 15 minutes or hourly.</li>
       </ol>
       <p className="sheet-hint">Anyone with a link can see those events, so only share it with the family. If a link gets out, tap New link.</p>

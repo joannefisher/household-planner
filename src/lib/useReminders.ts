@@ -6,17 +6,20 @@ import { addDays, fromIsoDay, isoDay } from "@/lib/dates";
 import { occurrencesBetween } from "@/lib/recurrence";
 import type { Occurrence, PlannerEvent } from "@/lib/types";
 
-// Reminders show on screen from 7am on the day they're due until the event starts.
-// "Done" clears one for good; "Snooze" hides it until 7am tomorrow.
+// Day, week and month reminders show on screen from 7am on the day they're due until the event
+// starts; the 1-hour one shows from an hour before. "Done" clears one for good. "Snooze" hides
+// it until 7am tomorrow, or for 15 minutes for the 1-hour reminder.
+// Phones subscribed to the calendar feed also get these as alerts (see lib/ics.ts).
 
-export type Timing = "1d" | "1w" | "1m";
-export const TIMING_LABEL: Record<Timing, string> = { "1d": "tomorrow", "1w": "in a week", "1m": "in a month" };
-const ORDER: Timing[] = ["1d", "1w", "1m"]; // nearest first
+export type Timing = "1h" | "1d" | "1w" | "1m";
+export const TIMING_LABEL: Record<Timing, string> = { "1h": "in an hour", "1d": "tomorrow", "1w": "in a week", "1m": "in a month" };
+const ORDER: Timing[] = ["1h", "1d", "1w", "1m"]; // nearest first
 
 type State = { event_id: string; occurrence_date: string; timing: Timing; dismissed_at: string | null; snoozed_until: string | null };
 export type DueReminder = { key: string; occurrence: Occurrence; timing: Timing; date: string };
 
-function fireTime(occStart: Date, timing: Timing) {
+function fireTime(occStart: Date, timing: Timing, allDay: boolean) {
+  if (timing === "1h") return allDay ? new Date(8.64e15) : new Date(occStart.getTime() - 60 * 60 * 1000);
   const day = new Date(occStart.getFullYear(), occStart.getMonth(), occStart.getDate(), 7, 0);
   if (timing === "1d") return addDays(day, -1);
   if (timing === "1w") return addDays(day, -7);
@@ -74,7 +77,7 @@ export function useReminders(householdId: string | null, now: Date | null) {
       const wanted = (occ.event.reminders ?? []) as Timing[];
       const date = isoDay(occ.start);
       // Of the reminders that have come round, show only the nearest one
-      const fired = ORDER.filter((t) => wanted.includes(t) && fireTime(occ.start, t) <= now);
+      const fired = ORDER.filter((t) => wanted.includes(t) && fireTime(occ.start, t, occ.event.all_day) <= now);
       const timing = fired[0];
       if (!timing) continue;
       const st = states.find((s) => s.event_id === occ.event.id && s.occurrence_date === date && s.timing === timing);
@@ -88,14 +91,17 @@ export function useReminders(householdId: string | null, now: Date | null) {
   const act = useCallback(
     async (r: DueReminder, kind: "done" | "snooze") => {
       if (!householdId) return;
-      const tomorrow7 = fromIsoDay(isoDay(addDays(new Date(), 1)), 7, 0).toISOString();
+      const later =
+        r.timing === "1h"
+          ? new Date(Math.min(Date.now() + 15 * 60 * 1000, r.occurrence.start.getTime() - 60 * 1000)).toISOString()
+          : fromIsoDay(isoDay(addDays(new Date(), 1)), 7, 0).toISOString();
       const row = {
         household_id: householdId,
         event_id: r.occurrence.event.id,
         occurrence_date: r.date,
         timing: r.timing,
         dismissed_at: kind === "done" ? new Date().toISOString() : null,
-        snoozed_until: kind === "snooze" ? tomorrow7 : null,
+        snoozed_until: kind === "snooze" ? later : null,
         updated_at: new Date().toISOString(),
       };
       setStates((prev) => [...prev.filter((s) => !(s.event_id === row.event_id && s.occurrence_date === row.occurrence_date && s.timing === row.timing)), row]);

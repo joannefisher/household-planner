@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { fmt, hhmm, isoDay, minutesOfDay } from "@/lib/dates";
 import { describeRule, parseRule } from "@/lib/recurrence";
 import { describe, type Weather } from "@/lib/weather";
@@ -24,6 +24,8 @@ type Props = {
   onDinnerOpen?: (date: string) => void;
   // One tap puts that dinner's ingredients on the shopping list
   onDinnerShop?: (date: string) => void;
+  // The day's to-do list, drawn by the planner
+  todoSlot?: (iso: string, compact: boolean) => ReactNode;
 };
 
 // ---------- shared bits ----------
@@ -135,7 +137,7 @@ function layoutDay(items: Occurrence[], iso: string, startMin: number, endMin: n
   return placed;
 }
 
-export function WeekGrid({ days, occurrences: all, dinners, members, photos, weather, hidden, now, onOpen, onDinner, onDinnerOpen, onDinnerShop }: Props) {
+export function WeekGrid({ days, occurrences: all, dinners, members, photos, weather, hidden, now, onOpen, onDinner, onDinnerOpen, onDinnerShop, todoSlot }: Props) {
   const occurrences = all.filter((o) => shown(o, hidden, members));
   const allDay = occurrences.filter((o) => o.event.all_day);
   const timed = occurrences.filter((o) => !o.event.all_day);
@@ -238,6 +240,15 @@ export function WeekGrid({ days, occurrences: all, dinners, members, photos, wea
         ))}
       </div>
 
+      {todoSlot && (
+        <div className="gw-row gw-todo">
+          <div className="gw-gutter gw-label">To do</div>
+          {days.map(({ iso }) => (
+            <div key={iso} className={`gw-todo-cell${dayClass(iso)}`}>{todoSlot(iso, true)}</div>
+          ))}
+        </div>
+      )}
+
       <div className="gw-row gw-dinner">
         <div className="gw-gutter gw-label">Dinner</div>
         {days.map(({ iso, date }) => (
@@ -252,7 +263,7 @@ export function WeekGrid({ days, occurrences: all, dinners, members, photos, wea
 
 // ---------- phones: the week as a list of days ----------
 
-export function Agenda({ days, occurrences: all, dinners, members, photos, weather, hidden, now, onOpen, onDinner, onDinnerOpen, onDinnerShop }: Props) {
+export function Agenda({ days, occurrences: all, dinners, members, photos, weather, hidden, now, onOpen, onDinner, onDinnerOpen, onDinnerShop, todoSlot }: Props) {
   const occurrences = all.filter((o) => shown(o, hidden, members));
   const todayIso = isoDay(now);
   const offDays = noSchoolDays(all, days);
@@ -263,7 +274,7 @@ export function Agenda({ days, occurrences: all, dinners, members, photos, weath
         const w = weather?.days.find((d) => d.date === iso);
         const past = iso < todayIso;
         return (
-          <article key={iso} className={`ag-day${iso === todayIso ? " is-today" : ""}${past ? " is-past" : ""}${offDays.has(iso) ? " is-holiday" : ""}`}>
+          <article key={iso} id={`day-${iso}`} className={`ag-day${iso === todayIso ? " is-today" : ""}${past ? " is-past" : ""}${offDays.has(iso) ? " is-holiday" : ""}`}>
             <header className="ag-head">
               <span className="ag-date">
                 <span className="ag-num">{date.getDate()}</span>
@@ -290,6 +301,7 @@ export function Agenda({ days, occurrences: all, dinners, members, photos, weath
                 );
               })}
             </ul>
+            {todoSlot?.(iso, false)}
             <footer className="ag-dinner">
               <span className="ag-dinner-label" aria-hidden="true">🍽</span>
               <DinnerCell iso={iso} dinner={dinners.find((d) => d.date === iso)} onDinner={onDinner} onOpen={onDinnerOpen} onShop={onDinnerShop} label={fmt(date, { weekday: "long" })} />
@@ -297,6 +309,77 @@ export function Agenda({ days, occurrences: all, dinners, members, photos, weath
           </article>
         );
       })}
+    </section>
+  );
+}
+
+// ---------- month: what's on at a glance ----------
+
+type MonthProps = {
+  days: Day[];
+  month: number; // 0–11, the month being shown
+  occurrences: Occurrence[];
+  dinners: Dinner[];
+  members: Member[];
+  hidden: string[];
+  now: Date;
+  wide: boolean;
+  todoCount?: (iso: string) => number;
+  onPickDay: (date: Date) => void;
+};
+
+// Each day shows coloured bars in each person's colour (titles too on the kitchen screen),
+// so busy days stand out. Tap a day to open its week.
+export function MonthGrid({ days, month, occurrences: all, dinners, members, hidden, now, wide, todoCount, onPickDay }: MonthProps) {
+  const occurrences = all.filter((o) => shown(o, hidden, members));
+  const todayIso = isoDay(now);
+  const offDays = noSchoolDays(all, days);
+  const max = wide ? 3 : 4;
+  return (
+    <section className={`mg${wide ? " is-wide" : ""}`} aria-label="Month">
+      <div className="mg-row mg-dows" aria-hidden="true">
+        {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => <span key={d}>{wide ? d : d.charAt(0)}</span>)}
+      </div>
+      <div className="mg-row mg-days" style={{ gridTemplateRows: `repeat(${days.length / 7}, minmax(0, 1fr))` }}>
+        {days.map(({ iso, date }) => {
+          const items = occurrences
+            .filter((o) => onDay(o, iso) && !isNoSchool(o))
+            .sort((a, b) => Number(b.event.all_day) - Number(a.event.all_day) || a.start.getTime() - b.start.getTime());
+          const dinner = dinners.find((d) => d.date === iso);
+          const todos = todoCount?.(iso) ?? 0;
+          const other = date.getMonth() !== month;
+          const label = `${fmt(date, { weekday: "long", day: "numeric", month: "long" })}: ${items.length ? items.map((o) => o.event.title).join(", ") : "nothing planned"}`;
+          return (
+            <button
+              key={iso}
+              type="button"
+              className={`mg-day${iso === todayIso ? " is-today" : ""}${other ? " is-other" : ""}${iso < todayIso ? " is-past" : ""}${offDays.has(iso) ? " is-holiday" : ""}${items.length >= 3 ? " is-busy" : ""}`}
+              onClick={() => onPickDay(date)}
+              aria-label={label}
+            >
+              <span className="mg-top">
+                <span className="mg-num">{date.getDate()}</span>
+                {dinner && <span className="mg-dinner" title={dinner.recipes?.title ?? dinner.note ?? "Dinner planned"} aria-hidden="true">🍽</span>}
+                {todos > 0 && <span className="mg-todo" title={`${todos} to do`}>✓{todos}</span>}
+              </span>
+              <span className="mg-events">
+                {items.slice(0, max).map((o) => {
+                  const { colour } = whoOf(o, members);
+                  return wide ? (
+                    <span key={o.key} className={`mg-pill${o.event.all_day ? " is-allday" : ""}`} style={{ ["--c" as string]: colour }}>
+                      {!o.event.all_day && <span className="mg-time">{hhmm(o.start)}</span>}
+                      {o.event.title}
+                    </span>
+                  ) : (
+                    <span key={o.key} className="mg-bar" style={{ ["--c" as string]: colour }} />
+                  );
+                })}
+                {items.length > max && <span className="mg-more">+{items.length - max}</span>}
+              </span>
+            </button>
+          );
+        })}
+      </div>
     </section>
   );
 }

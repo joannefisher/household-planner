@@ -268,3 +268,138 @@
 .school-row.is-off { opacity: 0.5; }
 .school-row { display: flex !important; color: var(--ink) !important; font-size: 16px !important; }
 .school-row strong { font-size: 16px; }
+
+/* ---------- Tap-to-edit text (shopping, lists) ---------- */
+.inline-text { border: 0; background: none; padding: 6px 0; margin: 0; text-align: left; color: inherit; font: inherit; min-width: 0; flex: 1; cursor: text; overflow-wrap: anywhere; }
+.inline-text-edit { flex: 1; min-width: 0; display: flex; }
+.inline-text-edit input { min-height: 40px; padding: 0.3em 0.6em; font: inherit; background: var(--surface); color: var(--ink); }
+/* Shopping rows: tick box | words | qty | who | ⋯ */
+.item { gap: 8px; }
+.item-tick { border: 0; background: none; padding: 0 4px 0 0; min-height: 48px; min-width: 40px; display: grid; place-items: center start; flex: none; }
+.item .inline-text.item-name { min-height: 48px; display: flex; align-items: center; }
+.item.is-checked .inline-text.item-name { text-decoration: line-through; color: var(--muted); }
+button.item-qty { border: 0; background: none; padding: 6px 2px; }
+.item-edit { font-size: 22px; line-height: 1; padding: 8px 6px 8px 10px; color: var(--muted); }
+.list.is-full .item-tick { min-height: 54px; }
+.list.is-full .item .inline-text.item-name { font-size: 19px; min-height: 54px; }
+/* To-do rows */
+.lrow-main { flex-direction: row; align-items: center; flex-wrap: wrap; gap: 0 8px; padding: 0; }
+.lrow-main .inline-text { flex: 1 1 60%; min-height: 44px; }
+.todo-due { border: 0; background: none; padding: 0; }
+.lrow-more { border: 0; background: none; color: var(--muted); font-size: 22px; padding: 6px 4px 6px 6px; line-height: 1; flex: none; }
+.kitem .inline-text.kitem-title { padding: 4px 0; }
+.kitem .inline-text-edit input { font-family: var(--display); font-size: 19px; font-weight: 700; background: #fff; color: #2a2148; border-color: color-mix(in srgb, var(--k-from) 40%, #ccc); }
+
+/* Kids' list add box: always dark text on white, whatever the theme colour */
+.card-add.is-big input { background: #fff; color: #2a2148; }
+.card-add.is-big input::placeholder { color: #8b84a8; opacity: 1; }
+.kcard input, .kcard textarea { color: #2a2148; }
+
+/* ---------- Week / Month switch ---------- */
+.view-seg { flex: none; }
+.view-seg button { min-height: 38px; font-size: 15px; padding: 0 14px; }
+.cal .view-seg { margin-left: auto; }
+.cal .view-seg + .week-nav { margin-left: 0; }
+.cal-bar.is-phone { gap: 8px; }
+.cal-bar.is-phone .week-nav { gap: 4px; }
+.cal-bar.is-phone .week-label { padding: 0 12px; font-size: 15px; }
+@media (max-width: 380px) { .cal-bar.is-phone .view-seg button { padding: 0 9px; } }
+
+/* ---------- Month grid ---------- */
+.mg-title { font-size: 24px; margin: 2px 2px -4px; }
+.mg { display: grid; gap: 4px; }
+.mg.is-wide { flex: 1; min-height: 0; grid-template-rows: auto 1fr; }
+.mg-row { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.mg-dows span { text-align: center; font-family: var(--display); font-weight: 700; font-size: 13px; color: var(--muted); }
+.mg-day {
+  border: 0;
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  padding: 5px 4px 6px;
+  min-height: 66px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  text-align: left;
+  min-width: 0;
+  overflow: hidden;
+}
+.mg.is-wide .mg-day { background: var(--surface-2); padding: 6px 6px 6px; min-height: 0; gap: 3px; }
+.mg-day.is-holiday { background: var(--holiday); }
+.mg-day.is-other { opacity: 0.45; }
+.mg-day.is-past:not(.is-today) .mg-num { color: var(--muted); }
+.mg-day.is-today { box-shadow: inset 0 0 0 3px var(--primary); background: var(--today); }
+/* Busy days get a warmer wash so they stand out at a glance */
+.mg-day.is-busy:not(.is-today):not(.is-holiday) { background: color-mix(in srgb, var(--primary) 9%, var(--surface)); }
+.mg-top { display: flex; align-items: center; gap: 3px; min-width: 0; }
+.mg-num { font-family: var(--display); font-weight: 800; font-size: 17px; line-height: 1; font-stretch: 80%; margin-right: auto; padding-left: 2px; }
+.mg.is-wide .mg-num { font-size: 22px; }
+.mg-day.is-today .mg-num { color: var(--primary); }
+.mg-dinner { font-size: 11px; line-height: 1; }
+.mg-todo { font-size: 10.5px; font-weight: 700; font-family: var(--display); color: var(--primary); line-height: 1; }
+.mg.is-wide .mg-dinner { font-size: 14px; }
+.mg.is-wide .mg-todo { font-size: 13px; }
+.mg-events { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.mg-bar { display: block; height: 6px; border-radius: 999px; background: var(--c); }
+.mg-pill { display: block; border-radius: 6px; padding: 2px 6px; font-size: 13px; font-weight: 700; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: color-mix(in srgb, var(--c) 16%, var(--surface)); border-left: 4px solid var(--c); }
+.mg-pill.is-allday { background: var(--c); color: #fff; border-left: 0; }
+.mg-time { font-family: var(--display); font-weight: 600; font-size: 11.5px; color: var(--muted); margin-right: 4px; }
+.mg-more { font-size: 11px; font-weight: 700; color: var(--muted); line-height: 1; padding-left: 2px; }
+.mg.is-wide .mg-more { font-size: 13px; }
+.mg-hint { text-align: center; color: var(--muted); font-size: 14px; margin: 4px 0 0; }
+
+/* ---------- Daily to-dos ---------- */
+.dt { margin-top: 8px; padding-top: 8px; border-top: 2px dashed var(--rule); }
+.dt-head { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
+.dt-label { font-family: var(--display); font-weight: 700; font-size: 15px; color: var(--muted); margin-right: auto; display: inline-flex; align-items: center; gap: 6px; }
+.dt-count { font-size: 12px; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--primary); color: var(--on-primary); display: inline-grid; place-items: center; }
+.dt-link { border: 0; background: none; color: var(--primary); font-weight: 700; font-size: 14px; padding: 4px 0; }
+.dt-list { list-style: none; margin: 0; padding: 0; }
+.dt-item { display: flex; align-items: center; gap: 6px; min-height: 42px; }
+.dt-tick { border: 0; background: none; padding: 0; width: 34px; height: 42px; display: grid; place-items: center start; flex: none; }
+.dt-box { width: 24px; height: 24px; border-radius: 7px; border: 2.5px solid var(--muted); display: grid; place-items: center; font-size: 14px; font-weight: 800; }
+.dt-title { flex: 1; min-width: 0; border: 0; background: none; padding: 4px 0; text-align: left; font-weight: 600; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 6px; }
+.dt-rep { color: var(--muted); font-weight: 400; font-size: 0.85em; }
+.dt-from { font-size: 12.5px; font-weight: 700; color: var(--danger); font-family: var(--display); }
+.dt-item.is-done .dt-box { background: var(--muted); border-color: var(--muted); color: var(--surface); }
+.dt-item.is-done .dt-title { color: var(--muted); text-decoration: line-through; font-weight: 400; }
+.dt-item.is-planned { opacity: 0.6; }
+.dt-item.is-planned .dt-box { border-style: dashed; }
+.dt-new { border: 0; background: none; color: var(--muted); font-weight: 700; font-size: 15px; padding: 6px 0; }
+.dt-add input { min-height: 40px; padding: 0.3em 0.6em; }
+/* Kitchen week: compact to-do row above dinner */
+.gw { grid-template-rows: auto auto 1fr auto auto; }
+.gw-todo { border-top: 2px dashed var(--rule); }
+.gw-todo-cell { border-left: 1px solid var(--rule); padding: 4px 6px; max-height: 150px; overflow-y: auto; }
+.gw-todo-cell.is-today { background-color: var(--today); }
+.gw-todo-cell.is-holiday { background-color: var(--holiday); }
+.dt.is-compact { margin: 0; padding: 0; border: 0; }
+.dt.is-compact .dt-item { min-height: 30px; gap: 4px; }
+.dt.is-compact .dt-tick { width: 24px; height: 30px; }
+.dt.is-compact .dt-box { width: 18px; height: 18px; border-radius: 5px; border-width: 2px; font-size: 11px; }
+.dt.is-compact .dt-title { font-size: 13.5px; line-height: 1.2; padding: 2px 0; }
+.dt.is-compact .dt-from { font-size: 11px; }
+.dt.is-compact .dt-new { font-size: 13px; padding: 2px 0; }
+.dt.is-compact .dt-add input { min-height: 32px; font-size: 14px; }
+
+/* ---------- Smoother scrolling on phones ---------- */
+html { -webkit-overflow-scrolling: touch; }
+button, a, input, select, label { touch-action: manipulation; }
+@media (max-width: 899px) {
+  /* A blurred see-through tab bar is costly to redraw on every scroll frame on iPhones */
+  .tabs { backdrop-filter: none; -webkit-backdrop-filter: none; background: var(--bg); box-shadow: 0 -1px 0 var(--rule); }
+  /* No scroll-inside-a-scroll on phones: kids' cards grow with the page instead */
+  .kcard, .lcard { max-height: none; overflow: visible; }
+  .ag-day, .lcard { contain: layout paint; }
+  .fab { will-change: transform; }
+  .list-scroll { overflow: visible; }
+  /* Week controls stay in reach while scrolling the days */
+  .cal-bar.is-phone { position: sticky; top: 0; z-index: 3; background: var(--bg); margin: 0 -16px; padding: max(6px, env(safe-area-inset-top)) 16px 8px; }
+}
+
+.dt-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.mg.is-wide .mg-day.is-today { background: var(--today); }
+.mg.is-wide .mg-day.is-holiday { background: var(--holiday); }
+.mg.is-wide .mg-day.is-busy:not(.is-today):not(.is-holiday) { background: color-mix(in srgb, var(--primary) 9%, var(--surface-2)); }

@@ -5,6 +5,7 @@ import { AISLES, formatQuantity } from "@/lib/parse";
 import type { Member, ShoppingItem } from "@/lib/types";
 import type { useShoppingList } from "@/lib/useShoppingList";
 import { Avatar } from "./Avatar";
+import { InlineText } from "./InlineText";
 
 type List = ReturnType<typeof useShoppingList>;
 
@@ -122,7 +123,7 @@ export function ShoppingList({ list, members, photos, addedBy, onPickAdder, full
             <h3 className="aisle-name">{g.aisle}</h3>
             <ul>
               {g.items.map((i) => (
-                <Row key={i.id} item={i} by={memberOf(i.added_by)} photo={photos[i.added_by ?? ""]} onToggle={() => list.toggle(i)} onEdit={() => openEdit(i)} />
+                <Row key={i.id} item={i} by={memberOf(i.added_by)} photo={photos[i.added_by ?? ""]} onToggle={() => list.toggle(i)} onEdit={() => openEdit(i)} onRename={(name) => list.update(i.id, { name })} />
               ))}
             </ul>
           </div>
@@ -136,7 +137,7 @@ export function ShoppingList({ list, members, photos, addedBy, onPickAdder, full
             </div>
             <ul>
               {trolley.map((i) => (
-                <Row key={i.id} item={i} by={memberOf(i.added_by)} photo={photos[i.added_by ?? ""]} onToggle={() => list.toggle(i)} onEdit={() => openEdit(i)} />
+                <Row key={i.id} item={i} by={memberOf(i.added_by)} photo={photos[i.added_by ?? ""]} onToggle={() => list.toggle(i)} onEdit={() => openEdit(i)} onRename={(name) => list.update(i.id, { name })} />
               ))}
             </ul>
           </div>
@@ -164,21 +165,22 @@ export function ShoppingList({ list, members, photos, addedBy, onPickAdder, full
   );
 }
 
-function Row({ item, by, photo, onToggle, onEdit }: { item: ShoppingItem; by?: Member; photo?: string; onToggle: () => void; onEdit: () => void }) {
+// Tap the box to tick; tap the words to change them; "⋯" for quantity, aisle and usuals
+function Row({ item, by, photo, onToggle, onEdit, onRename }: { item: ShoppingItem; by?: Member; photo?: string; onToggle: () => void; onEdit: () => void; onRename: (name: string) => void }) {
   const colour = by?.colour;
   const qty = formatQuantity(item);
   return (
     <li className={`item${item.checked ? " is-checked" : ""}`}>
-      <button className="item-main" onClick={onToggle} aria-pressed={item.checked}>
+      <button className="item-tick" onClick={onToggle} aria-pressed={item.checked} aria-label={item.checked ? `Put ${item.name} back on the list` : `Tick off ${item.name}`}>
         <span className="tick" aria-hidden="true" style={{ borderColor: colour }}>
           {item.checked ? "✓" : ""}
         </span>
-        <span className="item-name">{item.name}</span>
-        {qty && <span className="item-qty">{qty}</span>}
-        {by && <span className="item-by" title={`Added by ${by.name}`}><Avatar member={by} size={22} photoUrl={photo} /></span>}
       </button>
-      <button className="item-edit" onClick={onEdit} aria-label={`Edit ${item.name}`}>
-        Edit
+      <InlineText className="item-name" value={item.name} label="Item" onSave={onRename} />
+      {qty && <button className="item-qty" onClick={onEdit} aria-label={`Change quantity of ${item.name}`}>{qty}</button>}
+      {by && <span className="item-by" title={`Added by ${by.name}`}><Avatar member={by} size={22} photoUrl={photo} /></span>}
+      <button className="item-edit" onClick={onEdit} aria-label={`More for ${item.name}: quantity, aisle, delete`} title="Quantity, aisle, delete">
+        ⋯
       </button>
     </li>
   );

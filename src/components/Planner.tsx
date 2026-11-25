@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getSupabase } from "@/lib/supabase/client";
-import { addDays, fmt, startOfWeek, weekLabel } from "@/lib/dates";
+import { addDays, fmt, isoDay, startOfWeek, weekLabel } from "@/lib/dates";
 import { describe, fetchWeather, type Weather } from "@/lib/weather";
 import { useHousehold, useWeek } from "@/lib/useHousehold";
 import { useShoppingList } from "@/lib/useShoppingList";
@@ -17,11 +17,14 @@ import { ListsTab } from "./ListsTab";
 import { SettingsExtras } from "./SettingsExtras";
 import { ShoppingList } from "./ShoppingList";
 import { TodoPanel } from "./TodoPanel";
-import { Agenda, WeekGrid } from "./Week";
+import { Agenda, MonthGrid, WeekGrid } from "./Week";
+import { DayTodoList, DayTodoSheets } from "./DayTodos";
+import { useDayTodos, type DayTodo } from "@/lib/useDayTodos";
 
 const ADDER_KEY = "planner.addingAs";
 const HIDDEN_KEY = "planner.hiddenPeople";
 const TAB_KEY = "planner.tab";
+const VIEW_KEY = "planner.calView";
 
 function readStore<T>(key: string, fallback: T): T {
   try {
@@ -45,6 +48,13 @@ function useNow(intervalMs: number) {
     return () => clearInterval(t);
   }, [intervalMs]);
   return now;
+}
+
+// The big clock ticks on its own, so the rest of the screen isn't redrawn every second
+function Clock() {
+  const now = useNow(1000);
+  if (!now) return null;
+  return <time className="clock" dateTime={now.toISOString()}>{fmt(now, { hour: "2-digit", minute: "2-digit", hour12: false })}</time>;
 }
 
 function useWide() {
@@ -74,12 +84,31 @@ function useWeather(lat?: number | null, lon?: number | null) {
 export function Planner() {
   const hh = useHousehold();
   const { household, members, me, photos } = hh;
-  const now = useNow(1000);
+  const now = useNow(20 * 1000);
   const wide = useWide();
   const [weekOffset, setWeekOffset] = useState(0);
+  const [view, setView] = useState<"week" | "month">("week");
+  const [monthOffset, setMonthOffset] = useState(0);
+  const [focusDay, setFocusDay] = useState<string | null>(null);
   const today = now ? new Date(now.getFullYear(), now.getMonth(), now.getDate()) : null;
   const weekStart = useMemo(() => addDays(startOfWeek(today ?? new Date()), weekOffset * 7), [today?.getTime(), weekOffset]); // eslint-disable-line react-hooks/exhaustive-deps
   const week = useWeek(household?.id ?? null, weekStart);
+  // Month view: whole weeks from the Monday on or before the 1st to the Sunday on or after the last day
+  const monthFirst = useMemo(() => {
+    const t = today ?? new Date();
+    return new Date(t.getFullYear(), t.getMonth() + monthOffset, 1);
+  }, [today?.getTime(), monthOffset]); // eslint-disable-line react-hooks/exhaustive-deps
+  const monthStart = useMemo(() => startOfWeek(monthFirst), [monthFirst]);
+  const monthLength = useMemo(() => {
+    const last = new Date(monthFirst.getFullYear(), monthFirst.getMonth() + 1, 0);
+    return Math.round((startOfWeek(last).getTime() - monthStart.getTime()) / 864e5) + 7;
+  }, [monthFirst, monthStart]);
+  const month = useWeek(view === "month" ? household?.id ?? null : null, monthStart, monthLength);
+  const todayIso = isoDay(today ?? new Date());
+  const range = view === "month" ? month.days : week.days;
+  const dayTodos = useDayTodos(household?.id ?? null, range[0].iso, range[range.length - 1].iso, todayIso);
+  const [todoEditing, setTodoEditing] = useState<DayTodo | null>(null);
+  const [repeatsOpen, setRepeatsOpen] = useState(false);
   const list = useShoppingList(household?.id ?? null);
   const weather = useWeather(household?.latitude, household?.longitude);
   const reminders = useReminders(household?.id ?? null, now);
@@ -92,7 +121,22 @@ export function Planner() {
   useEffect(() => {
     const saved = readStore<string>(TAB_KEY, "week");
     if (saved === "list" || saved === "lists") setTab(saved);
+    if (readStore<string>(VIEW_KEY, "week") === "month") setView("month");
   }, []);
+  const chooseView = (v: "week" | "month") => {
+    setView(v);
+    writeStore(VIEW_KEY, v);
+  };
+
+  // After tapping a day in the month, scroll the phone's week to that day
+  useEffect(() => {
+    if (!focusDay || view !== "week") return;
+    const t = setTimeout(() => {
+      document.getElementById(`day-${focusDay}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      setFocusDay(null);
+    }, 80);
+    return () => clearTimeout(t);
+  }, [focusDay, view, week.days]);
   const [sheet, setSheet] = useState<SheetRequest | null>(null);
   const [familyOpen, setFamilyOpen] = useState(false);
   const [familyMember, setFamilyMember] = useState<string | null>(null);
@@ -156,13 +200,37 @@ export function Planner() {
   const openNew = () => setSheet({ kind: "new", date: weekOffset === 0 ? now : weekStart, hour: Math.min(now.getHours() + 1, 22) });
   const signOut = () => getSupabase().auth.signOut().then(() => (location.href = "/login"));
 
+  const goToDate = (y: number, m: number, d: number) => {
+    const target = startOfWeek(new Date(y, m, d));
+    setWeekOffset(Math.round((target.getTime() - startOfWeek(today!).getTime()) / (7 * 864e5)));
+    setMonthOffset((y - today!.getFullYear()) * 12 + m - today!.getMonth());
+  };
+  const isMonth = view === "month";
+  const viewSwitch = (
+    <div className="seg view-seg" role="tablist" aria-label="Calendar view">
+      <button role="tab" aria-selected={!isMonth} className={!isMonth ? "is-on" : ""} onClick={() => chooseView("week")}>Week</button>
+      <button role="tab" aria-selected={isMonth} className={isMonth ? "is-on" : ""} onClick={() => chooseView("month")}>Month</button>
+    </div>
+  );
   const weekNav = (
     <div className="week-nav">
-      <button className="icon-btn" onClick={() => setWeekOffset((w) => w - 1)} aria-label="Previous week">‹</button>
-      <button className={`week-label${weekOffset === 0 ? " is-now" : ""}`} onClick={() => setWeekOffset(0)} title="Back to this week">
-        {weekOffset === 0 ? "This week" : weekLabel(weekStart)}
-      </button>
-      <button className="icon-btn" onClick={() => setWeekOffset((w) => w + 1)} aria-label="Next week">›</button>
+      {isMonth ? (
+        <>
+          <button className="icon-btn" onClick={() => setMonthOffset((w) => w - 1)} aria-label="Previous month">‹</button>
+          <button className={`week-label${monthOffset === 0 ? " is-now" : ""}`} onClick={() => setMonthOffset(0)} title="Back to this month">
+            {monthOffset === 0 ? "This month" : fmt(monthFirst, { month: wide ? "long" : "short", year: monthFirst.getFullYear() === now.getFullYear() ? undefined : "numeric" })}
+          </button>
+          <button className="icon-btn" onClick={() => setMonthOffset((w) => w + 1)} aria-label="Next month">›</button>
+        </>
+      ) : (
+        <>
+          <button className="icon-btn" onClick={() => setWeekOffset((w) => w - 1)} aria-label="Previous week">‹</button>
+          <button className={`week-label${weekOffset === 0 ? " is-now" : ""}`} onClick={() => setWeekOffset(0)} title="Back to this week">
+            {weekOffset === 0 ? "This week" : weekLabel(weekStart)}
+          </button>
+          <button className="icon-btn" onClick={() => setWeekOffset((w) => w + 1)} aria-label="Next week">›</button>
+        </>
+      )}
       <label className="jump" title="Go to a date">
         <span aria-hidden="true">📅</span>
         <span className="jump-text">Go to date</span>
@@ -172,8 +240,8 @@ export function Planner() {
           onChange={(e) => {
             if (!e.target.value) return;
             const [y, m, d] = e.target.value.split("-").map(Number);
-            const target = startOfWeek(new Date(y, m - 1, d));
-            setWeekOffset(Math.round((target.getTime() - startOfWeek(today!).getTime()) / (7 * 864e5)));
+            goToDate(y, m - 1, d);
+            setFocusDay(e.target.value);
             e.target.value = "";
           }}
         />
@@ -203,6 +271,40 @@ export function Planner() {
     </div>
   );
 
+  const todoSlot = (iso: string, compact: boolean) => (
+    <DayTodoList
+      iso={iso}
+      todayIso={todayIso}
+      entries={dayTodos.byDay.get(iso) ?? []}
+      dt={dayTodos}
+      members={members}
+      photos={photos}
+      me={wide ? members.find((m) => m.id === addingAs) ?? me : me}
+      compact={compact}
+      onEdit={setTodoEditing}
+      onRepeats={() => setRepeatsOpen(true)}
+    />
+  );
+  const pickDay = (date: Date) => {
+    goToDate(date.getFullYear(), date.getMonth(), date.getDate());
+    setFocusDay(isoDay(date));
+    chooseView("week");
+  };
+  const monthGrid = (
+    <MonthGrid
+      days={month.days}
+      month={monthFirst.getMonth()}
+      occurrences={month.occurrences}
+      dinners={month.dinners}
+      members={members}
+      hidden={hidden}
+      now={now}
+      wide={wide}
+      todoCount={(iso) => (iso < todayIso ? 0 : (dayTodos.byDay.get(iso) ?? []).filter((e) => e.kind === "planned" || !e.todo.done).length)}
+      onPickDay={pickDay}
+    />
+  );
+
   const shared = {
     days: week.days,
     occurrences: week.occurrences,
@@ -219,13 +321,14 @@ export function Planner() {
       setToast("Adding ingredients…");
       setToast(await shopForDinner(household.id, date, wide ? addingAs : me?.id ?? null));
     },
+    todoSlot,
   };
 
   return (
     <div className={`app${wide ? " is-wide" : ""}`}>
       <header className="top">
         <div className="clock-block">
-          <time className="clock" dateTime={now.toISOString()}>{fmt(now, { hour: "2-digit", minute: "2-digit", hour12: false })}</time>
+          {wide && <Clock />}
           <span className="today-date">{fmt(now, { weekday: "long", day: "numeric", month: "long" })}</span>
         </div>
 
@@ -252,15 +355,27 @@ export function Planner() {
           wide ? (
             <div className="cal">
               <div className="cal-bar">
-                <h2 className="cal-title">{fmt(weekStart, { month: "long", year: "numeric" })}</h2>
+                <h2 className="cal-title">{fmt(isMonth ? monthFirst : weekStart, { month: "long", year: "numeric" })}</h2>
+                {viewSwitch}
                 {weekNav}
               </div>
-              <WeekGrid {...shared} />
+              {isMonth ? monthGrid : <WeekGrid {...shared} />}
             </div>
           ) : (
             <>
-              <div className="cal-bar">{weekNav}</div>
-              <Agenda {...shared} />
+              <div className="cal-bar is-phone">
+                {viewSwitch}
+                {weekNav}
+              </div>
+              {isMonth ? (
+                <>
+                  <h2 className="cal-title mg-title">{fmt(monthFirst, { month: "long", year: "numeric" })}</h2>
+                  {monthGrid}
+                  <p className="mg-hint">Tap a day to see it in full.</p>
+                </>
+              ) : (
+                <Agenda {...shared} />
+              )}
             </>
           )
         ) : tab === "lists" ? (
@@ -317,6 +432,17 @@ export function Planner() {
         extra={<SettingsExtras household={household} members={members} me={me} photos={photos} onOpenDinners={() => { setFamilyOpen(false); setDinnerReq({ k: "week" }); }} />}
       />
 
+      <DayTodoSheets
+        dt={dayTodos}
+        members={members}
+        photos={photos}
+        editing={todoEditing}
+        repeatsOpen={repeatsOpen}
+        onCloseEdit={() => setTodoEditing(null)}
+        onCloseRepeats={() => setRepeatsOpen(false)}
+        onOpenRepeats={() => setRepeatsOpen(true)}
+      />
+      {dayTodos.error && <p className="planner-toast" role="alert">{dayTodos.error}</p>}
       {toast && <p className="planner-toast" role="status">{toast}</p>}
       <DinnersSheet request={dinnerReq} onClose={() => setDinnerReq(null)} householdId={household.id} days={week.days} meId={wide ? addingAs : me?.id ?? null} />
 

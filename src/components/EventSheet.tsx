@@ -151,7 +151,7 @@ function EventForm({ request, members, photos, onCancel, onSave, onDelete, onSki
         rrule,
         location: location.trim() || null,
         notes: notes.trim() || null,
-        reminders,
+        reminders: allDay ? reminders.filter((r) => r !== "1h") : reminders,
         memberIds: everyone ? [] : who,
       });
       onCancel();
@@ -290,9 +290,9 @@ function EventForm({ request, members, photos, onCancel, onSave, onDelete, onSki
       )}
 
       <div className="field">
-        <span>Remind me</span>
+        <span>Remind me <span className="legend-hint">On screen here, and as an alert on iPhones that have the planner calendar</span></span>
         <div className="ends-options" role="group" aria-label="Reminders">
-          {([["1d", "1 day before"], ["1w", "1 week before"], ["1m", "1 month before"]] as const).map(([v, l]) => {
+          {([["1h", "1 hour before"], ["1d", "1 day before"], ["1w", "1 week before"], ["1m", "1 month before"]] as const).filter(([v]) => !(allDay && v === "1h")).map(([v, l]) => {
             const on = reminders.includes(v);
             return (
               <button key={v} type="button" aria-pressed={on} className={`ends-option${on ? " is-on" : ""}`} onClick={() => setReminders((r) => (on ? r.filter((x) => x !== v) : [...r, v]))}>

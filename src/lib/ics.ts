@@ -11,6 +11,7 @@ export type FeedEvent = {
   rrule: string | null;
   location: string | null;
   notes: string | null;
+  reminders?: string[];
   updated_at: string;
   members: string[];
 };
@@ -108,8 +109,30 @@ function eventLines(e: FeedEvent, feed: Feed, host: string): string[] {
   if (e.location) lines.push(`LOCATION:${escapeText(e.location)}`);
   const desc = [everyone ? "Everyone" : `Who: ${who}`, e.notes ?? ""].filter(Boolean).join("\n");
   lines.push(`DESCRIPTION:${escapeText(desc)}`);
+  lines.push(...alarmLines(e));
   lines.push("END:VEVENT");
   return lines;
+}
+
+// Phone alerts for the planner's reminders. Timed events: that long before the start.
+// All-day events start at midnight, so day/week/month alerts go off at 7am instead.
+const TRIGGERS: Record<string, { timed: string; allDay: string | null }> = {
+  "1h": { timed: "-PT1H", allDay: null },
+  "1d": { timed: "-P1D", allDay: "-PT17H" },
+  "1w": { timed: "-P7D", allDay: "-P6DT17H" },
+  "1m": { timed: "-P28D", allDay: "-P27DT17H" },
+};
+const ALARM_TEXT: Record<string, string> = { "1h": "in 1 hour", "1d": "tomorrow", "1w": "in a week", "1m": "in 4 weeks" };
+
+function alarmLines(e: FeedEvent): string[] {
+  const out: string[] = [];
+  for (const r of e.reminders ?? []) {
+    const t = TRIGGERS[r];
+    const trigger = t && (e.all_day ? t.allDay : t.timed);
+    if (!trigger) continue;
+    out.push("BEGIN:VALARM", "ACTION:DISPLAY", `TRIGGER:${trigger}`, `DESCRIPTION:${escapeText(`${e.title} ${ALARM_TEXT[r]}`)}`, "END:VALARM");
+  }
+  return out;
 }
 
 // Our rule FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,TH;UNTIL=20270131;EXDATE=20261105 has dates
